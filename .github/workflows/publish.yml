@@ -1,0 +1,64 @@
+name: Publish Homeopathy learning reader
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout publication repository
+        uses: actions/checkout@v6
+
+      - name: Checkout current production source
+        uses: actions/checkout@v6
+        with:
+          repository: vamsikrishnajallipalli/master-ek-homeo-notes
+          ref: main
+          path: source
+          persist-credentials: false
+
+      - name: Record source commit
+        id: source
+        shell: bash
+        run: echo "sha=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: source/reader/package-lock.json
+
+      - name: Build learner-facing Reader
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
+        run: python3 scripts/build_public_reader.py source public
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
