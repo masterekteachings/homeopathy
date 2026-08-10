@@ -2,9 +2,15 @@
 
 Public learner-facing publication of the Homeopathy teaching collection.
 
-Live site target: `https://masterekteachings.github.io/homeopathy/`
+Canonical learner site: `https://masterekteachings.github.io/homeopathy/`
 
-The public Reader is rebuilt from the current production source repository and contains only learner-facing material. Internal transcripts, QC evidence, automation, prompts, provider outputs and the project dashboard are not published here.
+Optional noncanonical draft preview: `https://masterekteachings.github.io/homeopathy/preview/`
+
+The canonical Reader is rebuilt from the current production source repository and contains only learner-facing Philosophy bundles whose English, Telugu and Russian notes are all explicitly marked `note_status: complete` after final publication QC. Draft or merely source-checked bundles must not appear at the canonical URL.
+
+The `/preview/` surface may expose the current 38-lecture trilingual draft set for review or urgent access, but it is deliberately noncanonical and must never be used as evidence that a lecture passed final QC.
+
+Internal transcripts, QC evidence, automation, prompts, provider outputs and the project dashboard are not published here.
 
 ## Publication model
 
@@ -13,7 +19,8 @@ The public Reader is rebuilt from the current production source repository and c
 The Pages workflow can be run manually and also checks for new production changes on a schedule. Each build:
 
 1. checks out the current production `main`;
-2. removes internal project-control UI from the public build;
-3. builds the learner-facing Reader for `/homeopathy/`;
-4. publishes the static artifact to GitHub Pages;
-5. writes `status.json` so the root Master E.K. Teachings portal can show current release coverage without hand-maintained counts.
+2. builds the noncanonical `/preview/` from the complete trilingual draft set;
+3. removes every non-final Philosophy bundle from the canonical build unless EN+TE+RU all say `note_status: complete`;
+4. removes internal project-control UI from the public build;
+5. publishes the canonical Reader at `/homeopathy/` and the draft preview at `/homeopathy/preview/`;
+6. writes canonical `status.json` so the root Master E.K. Teachings portal can show final-QC release coverage without hand-maintained counts.
