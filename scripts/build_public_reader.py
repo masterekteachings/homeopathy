@@ -143,6 +143,17 @@ replace_required(
     "project dashboard render branch",
 )
 
+# The internal Reader intentionally exposes a Project dashboard link. The
+# public learner build must not advertise or link to owner/operator controls,
+# even though the route itself has already been removed above.
+library = READER / "src" / "components" / "Library.tsx"
+replace_required(
+    library,
+    '        <p className="app-meta library-owner-link">\n          <a href="#/project">Project dashboard</a>\n        </p>\n',
+    "",
+    "project dashboard learner link",
+)
+
 # The public build does not generate the internal pipeline dashboard data.
 package_path = READER / "package.json"
 package = json.loads(package_path.read_text(encoding="utf-8"))
