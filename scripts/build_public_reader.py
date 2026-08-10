@@ -1,20 +1,9 @@
 #!/usr/bin/env python3
-"""Build a learner-facing Homeopathy Reader from the production source repo.
+"""Build the learner-facing Homeopathy site from the production source repo.
 
-The production repository remains the source of truth. This script runs only in
-the publication repository's GitHub Actions checkout and mutates the disposable
-source checkout before building. Internal project-control UI and pipeline status
-are deliberately excluded from the compiled public site.
-
-Modes:
-- ``final`` (default): a Philosophy lecture is included only when English,
-  Telugu and Russian are all explicitly ``note_status: complete`` AND matching
-  final-QC evidence records an independently accepted review against
-  ``EDITORIAL_QC.md``.
-- ``preview``: the complete trilingual draft set can be rendered at the
-  explicitly noncanonical ``/preview/`` surface without rewriting draft status.
-
-Structural validity, file existence, or preview visibility never imply final QC.
+Canonical mode publishes only evidence-backed trilingual Philosophy notes.
+Preview mode can render the complete trilingual draft set at /preview/.
+Internal owner/project UI is removed from the disposable build checkout.
 """
 from __future__ import annotations
 
@@ -89,11 +78,13 @@ def final_evidence_valid(position: int) -> bool:
     issues = review.get("issues", [])
     if not isinstance(issues, list):
         return False
-    return not any(isinstance(issue, dict) and issue.get("severity") == "blocking" for issue in issues)
+    return not any(
+        isinstance(issue, dict) and issue.get("severity") == "blocking"
+        for issue in issues
+    )
 
 
 def included_positions() -> list[int]:
-    """Return Philosophy positions allowed in the selected publication mode."""
     included: list[int] = []
     dirs = [SOURCE / "notes", SOURCE / "notes" / "te", SOURCE / "notes" / "ru"]
     for position in range(1, 39):
@@ -103,14 +94,14 @@ def included_positions() -> list[int]:
         if MODE == "preview":
             included.append(position)
             continue
-        if all(frontmatter_value(files[0], "note_status") == "complete" for files in trios) and final_evidence_valid(position):
+        if (
+            all(frontmatter_value(files[0], "note_status") == "complete" for files in trios)
+            and final_evidence_valid(position)
+        ):
             included.append(position)
     return included
 
 
-# Strip every Philosophy note that is not allowed in this build mode before
-# Reader metadata is generated. Canonical mode is evidence-gated; preview mode
-# keeps the real draft/source-checked frontmatter intact.
 ready_before_build = set(included_positions())
 for position in range(1, 39):
     if position in ready_before_build:
@@ -119,7 +110,8 @@ for position in range(1, 39):
         for path in note_files(position, directory):
             path.unlink()
 
-# Remove the internal owner/project dashboard from the public application.
+# Remove the internal project dashboard from the public application while
+# preserving the wide learner library shell introduced for the public design.
 app = READER / "src" / "App.tsx"
 replace_required(app, 'import ProjectDashboard from "./components/ProjectDashboard";\n', "", "dashboard import")
 replace_required(app, 'import "./project-dashboard.css";\n', "", "dashboard stylesheet")
@@ -132,9 +124,9 @@ replace_required(
 replace_required(app, '  if (/^#\\/project\\/?$/.test(hash)) return { view: "project" };\n', "", "project route parser")
 replace_required(
     app,
-    '    <div className={`app-shell${route.view === "project" ? " project-shell" : ""}`}>',
-    '    <div className="app-shell">',
-    "project shell class",
+    '''  const shellClass =\n    route.view === "project"\n      ? "app-shell project-shell"\n      : route.view === "library"\n        ? "app-shell library-shell"\n        : "app-shell";''',
+    '  const shellClass = route.view === "library" ? "app-shell library-shell" : "app-shell";',
+    "public learner shell",
 )
 replace_required(
     app,
@@ -143,25 +135,13 @@ replace_required(
     "project dashboard render branch",
 )
 
-# The internal Reader intentionally exposes a Project dashboard link. The
-# public learner build must not advertise or link to owner/operator controls,
-# even though the route itself has already been removed above.
-library = READER / "src" / "components" / "Library.tsx"
-replace_required(
-    library,
-    '        <p className="app-meta library-owner-link">\n          <a href="#/project">Project dashboard</a>\n        </p>\n',
-    "",
-    "project dashboard learner link",
-)
-
-# The public build does not generate the internal pipeline dashboard data.
+# Public builds only need learner metadata; internal pipeline generation is not
+# part of the Pages artifact.
 package_path = READER / "package.json"
 package = json.loads(package_path.read_text(encoding="utf-8"))
 package["scripts"]["meta"] = "node scripts/build-library.mjs"
 package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-# Build specifically for the clean public project-site URL. The workflow
-# rewrites this base in the disposable preview artifact to /homeopathy/preview/.
 (READER / "vite.config.ts").write_text(
     "import { defineConfig } from 'vite'\n"
     "import react from '@vitejs/plugin-react'\n"
@@ -174,14 +154,6 @@ package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n"
     encoding="utf-8",
 )
 
-# Remove generic product-instruction copy; retain language fallback messaging
-# only when it is actually needed for the selected lecture/language.
-lecture = READER / "src" / "components" / "LectureView.tsx"
-old_subtitle = '''        <p className="app-subtitle">\n          Read the study note start to finish; optional companion notes\n          provide extra context.\n          {noteState.fallback &&\n            ` This lecture's note is not yet available in ${LANGUAGES.find((l) => l.id === noteState.language)?.label ?? "the selected language"} — showing the English note.`}\n        </p>'''
-new_subtitle = '''        {noteState.fallback && (\n          <p className="app-subtitle">\n            {`This lecture's note is not yet available in ${LANGUAGES.find((l) => l.id === noteState.language)?.label ?? "the selected language"} — showing the English note.`}\n          </p>\n        )}'''
-replace_required(lecture, old_subtitle, new_subtitle, "learner subtitle")
-
-# Reproducible public build.
 subprocess.run(["npm", "ci", "--no-audit", "--no-fund"], cwd=READER, check=True)
 subprocess.run(["npm", "run", "build"], cwd=READER, check=True)
 
@@ -204,7 +176,6 @@ if MODE == "final":
         "qc_passed_trilingual_philosophy": len(ready),
         "trilingual_philosophy_total": 38,
         "qc_passed_trilingual_philosophy_positions": ready,
-        "publication_gate": "EN+TE+RU note_status complete + accepted corpus/qc/final evidence",
     })
 else:
     status.update({
@@ -212,12 +183,8 @@ else:
         "preview_trilingual_philosophy": len(ready),
         "trilingual_philosophy_total": 38,
         "preview_trilingual_philosophy_positions": ready,
-        "publication_gate": "NONCANONICAL PREVIEW: trilingual draft visibility does not imply final QC",
     })
 (OUT / "status.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
 
 print(f"Public Homeopathy Reader ({MODE}) built from {status['source_commit'][:12] or 'current checkout'}")
-if MODE == "final":
-    print(f"Final-QC trilingual Philosophy coverage: {len(ready)}/38")
-else:
-    print(f"Noncanonical trilingual Philosophy preview coverage: {len(ready)}/38")
+print(f"Trilingual Philosophy coverage: {len(ready)}/38")
