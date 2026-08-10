@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Build the learner-facing Homeopathy Reader from the production source repo.
+"""Build a learner-facing Homeopathy Reader from the production source repo.
 
 The production repository remains the source of truth. This script runs only in
 the publication repository's GitHub Actions checkout and mutates the disposable
 source checkout before building. Internal project-control UI and pipeline status
 are deliberately excluded from the compiled public site.
 
-Publication rule: a Philosophy lecture is included only when its English,
-Telugu, and Russian learner notes are all explicitly marked `note_status:
-complete`. A structurally valid draft is useful for internal review but is not a
-public-release artifact.
+Modes:
+- ``final`` (default): a Philosophy lecture is included only when English,
+  Telugu and Russian are all explicitly ``note_status: complete`` AND matching
+  final-QC evidence records an independently accepted review against
+  ``EDITORIAL_QC.md``.
+- ``preview``: the complete trilingual draft set can be rendered at the
+  explicitly noncanonical ``/preview/`` surface without rewriting draft status.
+
+Structural validity, file existence, or preview visibility never imply final QC.
 """
 from __future__ import annotations
 
@@ -27,6 +32,9 @@ if len(sys.argv) != 3:
 SOURCE = Path(sys.argv[1]).resolve()
 OUT = Path(sys.argv[2]).resolve()
 READER = SOURCE / "reader"
+MODE = os.environ.get("MASTER_EK_PUBLICATION_MODE", "final").strip().lower() or "final"
+if MODE not in {"final", "preview"}:
+    raise SystemExit(f"unsupported MASTER_EK_PUBLICATION_MODE={MODE!r}")
 
 
 def replace_required(path: Path, old: str, new: str, label: str) -> None:
@@ -48,7 +56,7 @@ def frontmatter_value(path: Path, key: str) -> str | None:
             break
         if ":" not in line:
             continue
-        k, raw = line.split(":", 1)
+        k, raw = line.split(": 1) if False else line.split(":", 1)
         if k.strip() == key:
             return raw.strip().strip('"').strip("'")
     return None
@@ -58,29 +66,52 @@ def note_files(position: int, directory: Path) -> list[Path]:
     return list(directory.glob(f"{position:03d}-*.md"))
 
 
-def qc_complete_positions() -> list[int]:
-    """Return Philosophy positions whose full trilingual bundle is final.
+def final_evidence_valid(position: int) -> bool:
+    path = SOURCE / "corpus" / "qc" / "final" / f"{position:03d}.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    if data.get("position") != position or data.get("status") != "complete":
+        return False
+    if data.get("standard") != "EDITORIAL_QC.md":
+        return False
+    if not data.get("editorial_pass") or not data.get("independent_review"):
+        return False
+    review = data.get("review")
+    if not isinstance(review, dict) or review.get("ready") is not True:
+        return False
+    assessment = review.get("uncertainty_assessment")
+    if not isinstance(assessment, dict) or assessment.get("reviewed") is not True:
+        return False
+    if assessment.get("blocking") is not False:
+        return False
+    issues = review.get("issues", [])
+    if not isinstance(issues, list):
+        return False
+    return not any(isinstance(issue, dict) and issue.get("severity") == "blocking" for issue in issues)
 
-    The final state is explicit repository evidence: exactly one note in each
-    language and every note says `note_status: complete`. We do not infer final
-    QC from file existence, length, successful builds, or draft status.
-    """
-    ready: list[int] = []
+
+def included_positions() -> list[int]:
+    """Return Philosophy positions allowed in the selected publication mode."""
+    included: list[int] = []
     dirs = [SOURCE / "notes", SOURCE / "notes" / "te", SOURCE / "notes" / "ru"]
     for position in range(1, 39):
         trios = [note_files(position, directory) for directory in dirs]
-        if all(len(files) == 1 for files in trios) and all(
-            frontmatter_value(files[0], "note_status") == "complete" for files in trios
-        ):
-            ready.append(position)
-    return ready
+        if not all(len(files) == 1 for files in trios):
+            continue
+        if MODE == "preview":
+            included.append(position)
+            continue
+        if all(frontmatter_value(files[0], "note_status") == "complete" for files in trios) and final_evidence_valid(position):
+            included.append(position)
+    return included
 
 
-# Strip every non-final Philosophy note from this disposable checkout before
-# Reader metadata is generated. This keeps review drafts in the production repo
-# while making it impossible for the canonical public site to expose them by
-# accident.
-ready_before_build = set(qc_complete_positions())
+# Strip every Philosophy note that is not allowed in this build mode before
+# Reader metadata is generated. Canonical mode is evidence-gated; preview mode
+# keeps the real draft/source-checked frontmatter intact.
+ready_before_build = set(included_positions())
 for position in range(1, 39):
     if position in ready_before_build:
         continue
@@ -118,7 +149,8 @@ package = json.loads(package_path.read_text(encoding="utf-8"))
 package["scripts"]["meta"] = "node scripts/build-library.mjs"
 package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-# Build specifically for the clean public project-site URL.
+# Build specifically for the clean public project-site URL. The workflow
+# rewrites this base in the disposable preview artifact to /homeopathy/preview/.
 (READER / "vite.config.ts").write_text(
     "import { defineConfig } from 'vite'\n"
     "import react from '@vitejs/plugin-react'\n"
@@ -153,13 +185,28 @@ status = {
     "source_repository": "vamsikrishnajallipalli/master-ek-homeo-notes",
     "source_commit": os.environ.get("SOURCE_COMMIT", ""),
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-    "qc_passed_trilingual_philosophy": len(ready),
-    "trilingual_philosophy_total": 38,
-    "qc_passed_trilingual_philosophy_positions": ready,
     "languages": ["te", "en", "ru"],
-    "publication_gate": "EN+TE+RU note_status complete",
 }
+if MODE == "final":
+    status.update({
+        "release_stage": "final-qc-gated",
+        "qc_passed_trilingual_philosophy": len(ready),
+        "trilingual_philosophy_total": 38,
+        "qc_passed_trilingual_philosophy_positions": ready,
+        "publication_gate": "EN+TE+RU note_status complete + accepted corpus/qc/final evidence",
+    })
+else:
+    status.update({
+        "release_stage": "preview",
+        "preview_trilingual_philosophy": len(ready),
+        "trilingual_philosophy_total": 38,
+        "preview_trilingual_philosophy_positions": ready,
+        "publication_gate": "NONCANONICAL PREVIEW: trilingual draft visibility does not imply final QC",
+    })
 (OUT / "status.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
 
-print(f"Public Homeopathy Reader built from {status['source_commit'][:12] or 'current checkout'}")
-print(f"QC-passed trilingual Philosophy coverage: {len(ready)}/38")
+print(f"Public Homeopathy Reader ({MODE}) built from {status['source_commit'][:12] or 'current checkout'}")
+if MODE == "final":
+    print(f"Final-QC trilingual Philosophy coverage: {len(ready)}/38")
+else:
+    print(f"Noncanonical trilingual Philosophy preview coverage: {len(ready)}/38")
