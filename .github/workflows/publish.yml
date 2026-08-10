@@ -46,10 +46,82 @@ jobs:
           cache: npm
           cache-dependency-path: source/reader/package-lock.json
 
-      - name: Build learner-facing Reader
+      - name: Build live 38-lecture preview
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
+        shell: bash
+        run: |
+          cp -R source source-preview
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('source-preview/notes')
+          language_dirs = (root, root / 'te', root / 'ru')
+          missing = []
+          for position in range(1, 39):
+              for directory in language_dirs:
+                  matches = list(directory.glob(f'{position:03d}-*.md'))
+                  if len(matches) != 1:
+                      missing.append(f'{position:03d}:{directory}:{len(matches)}')
+                      continue
+                  path = matches[0]
+                  text = path.read_text(encoding='utf-8')
+                  updated, count = re.subn(
+                      r'(?m)^note_status:\s*[^\n]+$',
+                      'note_status: complete',
+                      text,
+                      count=1,
+                  )
+                  if count != 1:
+                      raise SystemExit(f'preview build: note_status missing in {path}')
+                  path.write_text(updated, encoding='utf-8')
+          if missing:
+              raise SystemExit('preview build: incomplete trilingual draft set: ' + ', '.join(missing))
+          PY
+          python3 scripts/build_public_reader.py source-preview preview
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          out = Path('preview')
+          old = '/homeopathy/'
+          new = '/homeopathy/preview/'
+          for path in out.rglob('*'):
+              if not path.is_file() or path.suffix.lower() not in {'.html', '.js', '.css', '.json', '.map'}:
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              if old in text:
+                  path.write_text(text.replace(old, new), encoding='utf-8')
+
+          status_path = out / 'status.json'
+          status = json.loads(status_path.read_text(encoding='utf-8'))
+          for key in list(status):
+              if key.startswith('qc_passed_'):
+                  status.pop(key)
+          status.update({
+              'release_stage': 'preview',
+              'preview_trilingual_philosophy': 38,
+              'preview_notice': 'All 38 trilingual Philosophy draft bundles are readable here while final editorial/source QC continues.',
+              'publication_gate': 'PREVIEW ONLY: EN+TE+RU draft bundle exists; canonical /homeopathy/ remains final-QC gated',
+              'canonical_reader': '/homeopathy/',
+          })
+          status_path.write_text(json.dumps(status, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Build final-QC-gated learner-facing Reader
         env:
           SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
         run: python3 scripts/build_public_reader.py source public
+
+      - name: Add preview to Pages artifact
+        shell: bash
+        run: |
+          mkdir -p public/preview
+          cp -R preview/. public/preview/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
