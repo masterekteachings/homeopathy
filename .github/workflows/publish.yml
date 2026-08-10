@@ -46,7 +46,7 @@ jobs:
           cache: npm
           cache-dependency-path: source/reader/package-lock.json
 
-      - name: Build live 38-lecture preview
+      - name: Build noncanonical 38-lecture preview
         env:
           SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
         shell: bash
@@ -106,7 +106,7 @@ jobs:
               'release_stage': 'preview',
               'preview_trilingual_philosophy': 38,
               'preview_notice': 'All 38 trilingual Philosophy draft bundles are readable here while final editorial/source QC continues.',
-              'publication_gate': 'PREVIEW ONLY: EN+TE+RU draft bundle exists; canonical /homeopathy/ becomes final when 38/38 pass QC',
+              'publication_gate': 'PREVIEW ONLY: draft visibility is noncanonical; canonical /homeopathy/ contains only final-QC complete trilingual bundles',
               'canonical_reader': '/homeopathy/',
           })
           status_path.write_text(json.dumps(status, indent=2) + '\n', encoding='utf-8')
@@ -117,47 +117,11 @@ jobs:
           SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
         run: python3 scripts/build_public_reader.py source public
 
-      - name: Add preview to Pages artifact
+      - name: Add noncanonical preview to Pages artifact
         shell: bash
         run: |
           mkdir -p public/preview
           cp -R preview/. public/preview/
-
-      - name: Route canonical entry to preview until final release
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import json
-
-          public = Path('public')
-          status = json.loads((public / 'status.json').read_text(encoding='utf-8'))
-          passed = int(status.get('qc_passed_trilingual_philosophy', 0))
-          if passed < 38:
-              (public / 'index.html').write_text('''<!doctype html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <meta http-equiv="refresh" content="0; url=/homeopathy/preview/" />
-            <title>Master E.K. Homeopathy Classes</title>
-            <script>location.replace('/homeopathy/preview/' + location.hash);</script>
-          </head>
-          <body>
-            <main>
-              <h1>Master E.K. Homeopathy Classes</h1>
-              <p>Opening the current 38-lecture preview while final editorial review continues.</p>
-              <p><a href="/homeopathy/preview/">Open the learning reader</a></p>
-            </main>
-          </body>
-          </html>
-          ''', encoding='utf-8')
-              status['canonical_entry'] = 'preview-until-38-of-38-final-qc'
-              (public / 'status.json').write_text(json.dumps(status, indent=2) + '\n', encoding='utf-8')
-              print(f'Canonical entry routed to preview; final-QC complete={passed}/38')
-          else:
-              print('38/38 final-QC complete; canonical final Reader remains at /homeopathy/')
-          PY
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
