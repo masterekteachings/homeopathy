@@ -56,7 +56,7 @@ def frontmatter_value(path: Path, key: str) -> str | None:
             break
         if ":" not in line:
             continue
-        k, raw = line.split(": 1) if False else line.split(":", 1)
+        k, raw = line.split(":", 1)
         if k.strip() == key:
             return raw.strip().strip('"').strip("'")
     return None
