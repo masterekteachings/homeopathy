@@ -5,6 +5,11 @@ The production repository remains the source of truth. This script runs only in
 the publication repository's GitHub Actions checkout and mutates the disposable
 source checkout before building. Internal project-control UI and pipeline status
 are deliberately excluded from the compiled public site.
+
+Publication rule: a Philosophy lecture is included only when its English,
+Telugu, and Russian learner notes are all explicitly marked `note_status:
+complete`. A structurally valid draft is useful for internal review but is not a
+public-release artifact.
 """
 from __future__ import annotations
 
@@ -30,6 +35,58 @@ def replace_required(path: Path, old: str, new: str, label: str) -> None:
         raise SystemExit(f"public-build guard failed: {label} marker not found in {path}")
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
+
+def frontmatter_value(path: Path, key: str) -> str | None:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    if not text.startswith("---\n"):
+        return None
+    for line in text.splitlines()[1:]:
+        if line == "---":
+            break
+        if ":" not in line:
+            continue
+        k, raw = line.split(":", 1)
+        if k.strip() == key:
+            return raw.strip().strip('"').strip("'")
+    return None
+
+
+def note_files(position: int, directory: Path) -> list[Path]:
+    return list(directory.glob(f"{position:03d}-*.md"))
+
+
+def qc_complete_positions() -> list[int]:
+    """Return Philosophy positions whose full trilingual bundle is final.
+
+    The final state is explicit repository evidence: exactly one note in each
+    language and every note says `note_status: complete`. We do not infer final
+    QC from file existence, length, successful builds, or draft status.
+    """
+    ready: list[int] = []
+    dirs = [SOURCE / "notes", SOURCE / "notes" / "te", SOURCE / "notes" / "ru"]
+    for position in range(1, 39):
+        trios = [note_files(position, directory) for directory in dirs]
+        if all(len(files) == 1 for files in trios) and all(
+            frontmatter_value(files[0], "note_status") == "complete" for files in trios
+        ):
+            ready.append(position)
+    return ready
+
+
+# Strip every non-final Philosophy note from this disposable checkout before
+# Reader metadata is generated. This keeps review drafts in the production repo
+# while making it impossible for the canonical public site to expose them by
+# accident.
+ready_before_build = set(qc_complete_positions())
+for position in range(1, 39):
+    if position in ready_before_build:
+        continue
+    for directory in (SOURCE / "notes", SOURCE / "notes" / "te", SOURCE / "notes" / "ru"):
+        for path in note_files(position, directory):
+            path.unlink()
 
 # Remove the internal owner/project dashboard from the public application.
 app = READER / "src" / "App.tsx"
@@ -90,31 +147,19 @@ if OUT.exists():
 shutil.copytree(READER / "dist", OUT)
 (OUT / ".nojekyll").write_text("", encoding="utf-8")
 
-
-def positions_with_trilingual_notes() -> list[int]:
-    ready: list[int] = []
-    for position in range(1, 39):
-        prefix = f"{position:03d}-"
-        en = list((SOURCE / "notes").glob(prefix + "*.md"))
-        te = list((SOURCE / "notes" / "te").glob(prefix + "*.md"))
-        ru = list((SOURCE / "notes" / "ru").glob(prefix + "*.md"))
-        if en and te and ru:
-            ready.append(position)
-    return ready
-
-
-ready = positions_with_trilingual_notes()
+ready = sorted(ready_before_build)
 status = {
     "collection": "homeopathy",
     "source_repository": "vamsikrishnajallipalli/master-ek-homeo-notes",
     "source_commit": os.environ.get("SOURCE_COMMIT", ""),
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-    "trilingual_philosophy_complete": len(ready),
+    "qc_passed_trilingual_philosophy": len(ready),
     "trilingual_philosophy_total": 38,
-    "trilingual_philosophy_positions": ready,
+    "qc_passed_trilingual_philosophy_positions": ready,
     "languages": ["te", "en", "ru"],
+    "publication_gate": "EN+TE+RU note_status complete",
 }
 (OUT / "status.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
 
 print(f"Public Homeopathy Reader built from {status['source_commit'][:12] or 'current checkout'}")
-print(f"Trilingual Philosophy coverage: {len(ready)}/38")
+print(f"QC-passed trilingual Philosophy coverage: {len(ready)}/38")
