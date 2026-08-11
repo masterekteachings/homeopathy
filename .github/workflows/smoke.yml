@@ -1,6 +1,8 @@
 name: Smoke test canonical Homeopathy Pages
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -84,6 +86,7 @@ jobs:
               'The course begins by defining Homeopathy through sārūpya siddhānta',
               'Potentization is introduced as the preparation that reduces crude poisonous material',
               'Materia Medica is introduced by its source of knowledge',
+              'Nyāsa Vidyā is introduced as the ancient science of correspondences',
           ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
