@@ -21,8 +21,9 @@ Internal transcripts, QC evidence, automation, prompts, provider outputs and the
 The Pages workflow can be run manually and also checks for new production changes on a schedule. Each build:
 
 1. checks out the current production `main`;
-2. builds the noncanonical `/preview/` from the available trilingual draft set;
-3. removes every non-final Philosophy bundle from the canonical build unless EN+TE+RU all say `note_status: complete`;
-4. removes internal project-control UI from the public build;
-5. publishes the canonical Reader at `/homeopathy/` and the draft preview at `/homeopathy/preview/`;
-6. writes canonical `status.json` so the root Master E.K. Teachings portal can show release coverage without hand-maintained counts.
+2. validates the curated multilingual enrichment evidence and generates the derived enrichment index;
+3. builds the noncanonical `/preview/` from the available trilingual draft set;
+4. removes every non-final Philosophy bundle from the canonical build unless EN+TE+RU all say `note_status: complete`;
+5. removes internal project-control UI from the public build;
+6. publishes the canonical Reader at `/homeopathy/` and the draft preview at `/homeopathy/preview/`;
+7. writes canonical `status.json` so the root Master E.K. Teachings portal can show release coverage without hand-maintained counts.
