@@ -68,14 +68,26 @@ jobs:
               bundles.append(get(url + ('&' if '?' in url else '?') + 'smoke=' + str(int(time.time()))))
 
           deployed_js = '\n'.join(bundles)
-          required = ['Explore & search', 'Search Philosophy', 'Browse the corpus']
+          required = [
+              'Explore & search',
+              'Search Philosophy',
+              'Browse the corpus',
+              'Teaching development',
+              'బోధన వికాసం',
+              'Развитие учения',
+              'Vital force becomes the central dynamic explanation',
+              'Psora becomes an organising chronic idea',
+          ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
               raise SystemExit(
-                  'deployed JS missing learner strings after scanning '
+                  'deployed JS missing learner/progression strings after scanning '
                   + str(len(assets)) + ' asset(s): ' + ', '.join(missing)
               )
-          print(f'canonical Pages is current/newer and Explore/search is present across {len(assets)} JS asset(s)')
+          print(
+              f'canonical Pages is current/newer and Explore/search + reviewed teaching progression '
+              f'is present across {len(assets)} JS asset(s)'
+          )
           PY
                   exit 0
                 fi
