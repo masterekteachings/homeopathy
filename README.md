@@ -8,7 +8,7 @@ Optional noncanonical draft preview: `https://masterekteachings.github.io/homeop
 
 The canonical Reader is rebuilt from the current production source repository and publishes each learner-facing Philosophy bundle as soon as its English, Telugu and Russian notes are all explicitly marked `note_status: complete` after final publication QC. Draft or merely source-checked bundles must not appear at the canonical URL.
 
-The learner homepage may identify an upcoming teaching series, but unfinished lecture rows are not exposed in the canonical Reader. Page-color preferences and core navigation are shared across the learner site.
+The learner homepage may identify an upcoming teaching series, but unfinished lecture rows are not exposed in the canonical Reader. Page-color preferences, reading-language preference and core navigation are shared across the learner site.
 
 The `/preview/` surface may expose the current 38-lecture trilingual draft set for review, but it is deliberately noncanonical and must never be used as evidence that a lecture passed final QC.
 
