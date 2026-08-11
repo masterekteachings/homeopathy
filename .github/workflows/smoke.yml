@@ -89,6 +89,10 @@ jobs:
               'Nyāsa Vidyā is introduced as the ancient science of correspondences',
               'Sycosis is established first by its physical direction',
               'The syphilitic tendency is first distinguished by direction',
+              "Hering's three laws of cure are explicitly established as tests of direction after treatment",
+              'అధ్యయన సహచరి',
+              'Учебный помощник',
+              'Public-domain historical scan of The Chronic Diseases',
           ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
@@ -97,8 +101,8 @@ jobs:
                   + str(len(assets)) + ' asset(s): ' + ', '.join(missing)
               )
           print(
-              f'canonical Pages is current/newer and Explore/search + reviewed teaching progression '
-              f'is present across {len(assets)} JS asset(s)'
+              f'canonical Pages is current/newer and the M4 learner edition is present '
+              f'across {len(assets)} JS asset(s)'
           )
           PY
                   exit 0
