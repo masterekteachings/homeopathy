@@ -13,4 +13,6 @@ The production source now includes:
 - localized English/Telugu/Russian inline study-companion interface;
 - selective sourced study context rather than decorative filling, including the public-domain Hering portrait and a public-domain historical scan of Hahnemann's *The Chronic Diseases*.
 
+The first final-M4 CI run correctly rejected one stale Russian `prajna` anchor in Lecture 029. That literal anchor has now been repaired in production source to match the restored Russian note exactly. This commit reruns the same strict build gate rather than weakening validation.
+
 The PR workflows must rebuild against current production `main`, run strict enrichment/progression validation, compile the learner Reader, assert canonical 38/38 coverage, and smoke-test the deployed learner markers. A passing result is the evidence gate for closing M4 and making Materia Medica the active main milestone.
