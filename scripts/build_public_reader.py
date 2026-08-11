@@ -111,21 +111,21 @@ for position in range(1, 39):
             path.unlink()
 
 # Remove the internal project dashboard from the public application while
-# preserving the wide learner library shell introduced for the public design.
+# preserving the learner library, Explore/search and lecture routes.
 app = READER / "src" / "App.tsx"
 replace_required(app, 'import ProjectDashboard from "./components/ProjectDashboard";\n', "", "dashboard import")
 replace_required(app, 'import "./project-dashboard.css";\n', "", "dashboard stylesheet")
 replace_required(
     app,
-    'type Route =\n  | { view: "library" }\n  | { view: "lecture"; position: number }\n  | { view: "project" };',
-    'type Route =\n  | { view: "library" }\n  | { view: "lecture"; position: number };',
+    'type Route =\n  | { view: "library" }\n  | { view: "lecture"; position: number }\n  | { view: "explore"; entityId?: string }\n  | { view: "project" };',
+    'type Route =\n  | { view: "library" }\n  | { view: "lecture"; position: number }\n  | { view: "explore"; entityId?: string };',
     "project route type",
 )
 replace_required(app, '  if (/^#\\/project\\/?$/.test(hash)) return { view: "project" };\n', "", "project route parser")
 replace_required(
     app,
-    '''  const shellClass =\n    route.view === "project"\n      ? "app-shell project-shell"\n      : route.view === "library"\n        ? "app-shell library-shell"\n        : "app-shell";''',
-    '  const shellClass = route.view === "library" ? "app-shell library-shell" : "app-shell";',
+    '''  const shellClass =\n    route.view === "project"\n      ? "app-shell project-shell"\n      : route.view === "library" || route.view === "explore"\n        ? "app-shell library-shell"\n        : "app-shell";''',
+    '  const shellClass =\n    route.view === "library" || route.view === "explore"\n      ? "app-shell library-shell"\n      : "app-shell";',
     "public learner shell",
 )
 replace_required(
@@ -135,11 +135,17 @@ replace_required(
     "project dashboard render branch",
 )
 
-# Public builds only need learner metadata; internal pipeline generation is not
-# part of the Pages artifact.
+# Public builds must generate exactly the learner metadata consumed by the
+# library, full-text search and semantic Explore views. Internal pipeline
+# status generation is intentionally excluded from the Pages artifact.
 package_path = READER / "package.json"
 package = json.loads(package_path.read_text(encoding="utf-8"))
-package["scripts"]["meta"] = "node scripts/build-library.mjs"
+package["scripts"]["meta"] = (
+    "node scripts/validate-enrichment.mjs && "
+    "node scripts/build-enrichment-index.mjs && "
+    "node scripts/build-library.mjs && "
+    "node scripts/build-search-index.mjs"
+)
 package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 (READER / "vite.config.ts").write_text(
