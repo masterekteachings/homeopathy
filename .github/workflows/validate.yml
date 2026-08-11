@@ -1,0 +1,57 @@
+name: Validate Homeopathy publication build
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout publication repository
+        uses: actions/checkout@v6
+
+      - name: Checkout current production source
+        uses: actions/checkout@v6
+        with:
+          repository: vamsikrishnajallipalli/master-ek-homeo-notes
+          ref: main
+          path: source
+          persist-credentials: false
+
+      - name: Record source commit
+        id: source
+        shell: bash
+        run: echo "sha=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: source/reader/package-lock.json
+
+      - name: Build final-QC-gated learner Reader without deploying
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
+          MASTER_EK_PUBLICATION_MODE: final
+        run: python3 scripts/build_public_reader.py source public
+
+      - name: Verify expected learner artifact
+        shell: bash
+        run: |
+          test -f public/index.html
+          test -f public/status.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          status = json.loads(Path('public/status.json').read_text(encoding='utf-8'))
+          assert status['qc_passed_trilingual_philosophy'] == 38, status
+          assert status['trilingual_philosophy_total'] == 38, status
+          print('validated 38/38 learner artifact')
+          PY
