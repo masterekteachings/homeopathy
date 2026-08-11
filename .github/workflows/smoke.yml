@@ -18,59 +18,64 @@ jobs:
           repository: vamsikrishnajallipalli/master-ek-homeo-notes
           ref: main
           path: source
+          fetch-depth: 200
           persist-credentials: false
 
-      - name: Wait for canonical Pages to reach current source
+      - name: Wait for canonical Pages to reach current source or newer
         shell: bash
         run: |
           EXPECTED="$(git -C source rev-parse HEAD)"
           BASE="https://masterekteachings.github.io/homeopathy"
-          export EXPECTED BASE
-          python3 - <<'PY'
-          import json
+          LAST=""
+
+          for attempt in $(seq 1 24); do
+            CACHE="$(date +%s)"
+            if STATUS="$(curl -fsSL --retry 2 "$BASE/status.json?smoke=$CACHE")"; then
+              LIVE="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("source_commit", ""))' <<<"$STATUS")"
+              COUNT="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("qc_passed_trilingual_philosophy", 0))' <<<"$STATUS")"
+              TOTAL="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("trilingual_philosophy_total", 0))' <<<"$STATUS")"
+              LAST="$LIVE"
+
+              if [[ -n "$LIVE" && "$COUNT" == "38" && "$TOTAL" == "38" ]]; then
+                git -C source fetch --quiet --depth=200 origin "$LIVE" || true
+                if git -C source merge-base --is-ancestor "$EXPECTED" "$LIVE" 2>/dev/null; then
+                  export BASE
+                  python3 - <<'PY'
           import os
           import re
           import time
           import urllib.request
 
-          expected = os.environ['EXPECTED']
           base = os.environ['BASE']
-          last = None
 
           def get(url):
               req = urllib.request.Request(url, headers={'User-Agent': 'master-ek-publication-smoke/1.0'})
               with urllib.request.urlopen(req, timeout=20) as response:
                   return response.read().decode('utf-8', errors='replace')
 
-          for attempt in range(24):
-              try:
-                  status_text = get(base + '/status.json?smoke=' + str(int(time.time())))
-                  status = json.loads(status_text)
-                  last = status.get('source_commit')
-                  if (
-                      last == expected
-                      and status.get('qc_passed_trilingual_philosophy') == 38
-                      and status.get('trilingual_philosophy_total') == 38
-                  ):
-                      html = get(base + '/?smoke=' + str(int(time.time())))
-                      assets = re.findall(r'(?:src|href)="([^"]+\.js)"', html)
-                      if not assets:
-                          raise RuntimeError('no JavaScript asset found in canonical HTML')
-                      js_url = assets[-1]
-                      if js_url.startswith('/'):
-                          js_url = 'https://masterekteachings.github.io' + js_url
-                      elif not js_url.startswith('http'):
-                          js_url = base + '/' + js_url.lstrip('./')
-                      js = get(js_url + ('&' if '?' in js_url else '?') + 'smoke=' + str(int(time.time())))
-                      required = ['Explore & search', 'Search Philosophy', 'Browse the corpus']
-                      missing = [item for item in required if item not in js]
-                      if missing:
-                          raise RuntimeError('deployed JS missing learner strings: ' + ', '.join(missing))
-                      print('canonical Pages is current and Explore/search bundle is deployed')
-                      raise SystemExit(0)
-              except Exception as exc:
-                  print(f'attempt {attempt + 1}: waiting: {exc}')
-              time.sleep(15)
-
-          raise SystemExit(f'canonical Pages did not reach source {expected}; last source_commit={last}')
+          html = get(base + '/?smoke=' + str(int(time.time())))
+          assets = re.findall(r'(?:src|href)="([^"]+\.js)"', html)
+          if not assets:
+              raise SystemExit('no JavaScript asset found in canonical HTML')
+          js_url = assets[-1]
+          if js_url.startswith('/'):
+              js_url = 'https://masterekteachings.github.io' + js_url
+          elif not js_url.startswith('http'):
+              js_url = base + '/' + js_url.lstrip('./')
+          js = get(js_url + ('&' if '?' in js_url else '?') + 'smoke=' + str(int(time.time())))
+          required = ['Explore & search', 'Search Philosophy', 'Browse the corpus']
+          missing = [item for item in required if item not in js]
+          if missing:
+              raise SystemExit('deployed JS missing learner strings: ' + ', '.join(missing))
+          print('canonical Pages is current/newer and Explore/search bundle is deployed')
           PY
+                  exit 0
+                fi
+              fi
+            fi
+            echo "attempt $attempt: waiting for source >= $EXPECTED; live=$LAST"
+            sleep 15
+          done
+
+          echo "canonical Pages did not reach source >= $EXPECTED; last source_commit=$LAST" >&2
+          exit 1
