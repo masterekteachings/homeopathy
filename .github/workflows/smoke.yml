@@ -44,6 +44,7 @@ jobs:
           import os
           import re
           import time
+          import urllib.parse
           import urllib.request
 
           base = os.environ['BASE']
@@ -54,20 +55,27 @@ jobs:
                   return response.read().decode('utf-8', errors='replace')
 
           html = get(base + '/?smoke=' + str(int(time.time())))
-          assets = re.findall(r'(?:src|href)="([^"]+\.js)"', html)
+          assets = list(dict.fromkeys(re.findall(r'(?:src|href)="([^"]+\.js)"', html)))
           if not assets:
               raise SystemExit('no JavaScript asset found in canonical HTML')
-          js_url = assets[-1]
-          if js_url.startswith('/'):
-              js_url = 'https://masterekteachings.github.io' + js_url
-          elif not js_url.startswith('http'):
-              js_url = base + '/' + js_url.lstrip('./')
-          js = get(js_url + ('&' if '?' in js_url else '?') + 'smoke=' + str(int(time.time())))
+
+          bundles = []
+          for asset in assets:
+              if asset.startswith('http'):
+                  url = asset
+              else:
+                  url = urllib.parse.urljoin(base + '/', asset)
+              bundles.append(get(url + ('&' if '?' in url else '?') + 'smoke=' + str(int(time.time()))))
+
+          deployed_js = '\n'.join(bundles)
           required = ['Explore & search', 'Search Philosophy', 'Browse the corpus']
-          missing = [item for item in required if item not in js]
+          missing = [item for item in required if item not in deployed_js]
           if missing:
-              raise SystemExit('deployed JS missing learner strings: ' + ', '.join(missing))
-          print('canonical Pages is current/newer and Explore/search bundle is deployed')
+              raise SystemExit(
+                  'deployed JS missing learner strings after scanning '
+                  + str(len(assets)) + ' asset(s): ' + ', '.join(missing)
+              )
+          print(f'canonical Pages is current/newer and Explore/search is present across {len(assets)} JS asset(s)')
           PY
                   exit 0
                 fi
