@@ -87,6 +87,8 @@ jobs:
               'Potentization is introduced as the preparation that reduces crude poisonous material',
               'Materia Medica is introduced by its source of knowledge',
               'Nyāsa Vidyā is introduced as the ancient science of correspondences',
+              'Sycosis is established first by its physical direction',
+              'The syphilitic tendency is first distinguished by direction',
           ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
