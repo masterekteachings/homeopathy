@@ -11,14 +11,12 @@ Current reviewed progression entities in production source:
 - **Organon of Medicine** — foundational source-book → first lifelong study text → mature whole-system synthesis;
 - **Totality of symptoms** — early characteristic-combination definition → whole-person pattern → longitudinal case history → stem/branches clarification → proved medicine/disease comparison;
 - **Tuberculinum** — deep constitutional remedy introduced in 036 → mental/periodic pattern and management deepened in 037 → whole-case recognition and remedy differentiation clarified in 038;
-- **Tubercular miasm** — later constitutional tendency introduced in 024 → broken periodicity and craving for change deepened in 031 → hereditary tendency distinguished from diagnosis and automatic nosode prescribing in 035.
+- **Tubercular miasm** — later constitutional tendency introduced in 024 → broken periodicity and craving for change deepened in 031 → hereditary tendency distinguished from diagnosis and automatic nosode prescribing in 035;
+- **Sārūpya siddhānta / law of similars** — Homeopathy named through similarity in 001 → operational medicine/patient matching in 002 → distinction from antipathy and isopathy clarified in 003;
+- **Potentization** — crude material action reduced while medicinal stimulus is retained in 002 → later explained as the balance between sufficient similar medicinal impression and minimal material injury in 030;
+- **Materia Medica** — grounded in observed healthy-human response in 003 → learned as living remedy character in 004 → clinically recognised through generals/modalities/mentals in 005 → used to distinguish drug effects from natural disease in 012.
 
-Evidence restoration for the latest batch was conservative and literal:
-
-- Telugu Tuberculinum anchors in 037 and 038 were restored from the exact final-note spelling `ట్యూబర్కులినమ్‌`;
-- Russian tubercular-miasm context in 031 was restored from the exact final-note phrase `туберкулёзной миазматической картине`;
-- the fully deleted tubercular-miasm mention in 035 was recreated only after exact English, Telugu and Russian final-note phrases all passed the guarded restore utility;
-- no Core Study Note was edited.
+Evidence restoration remains conservative and literal. Missing multilingual anchors are restored only when exact final-note text is verified by the guarded restore utility; no Core Study Note is edited merely to support enrichment.
 
 Publication chain remains:
 
@@ -31,4 +29,4 @@ Publication chain remains:
 - TypeScript/Vite learner build;
 - final artifact assertion confirming 38/38 canonical Philosophy coverage.
 
-This commit intentionally triggers canonical GitHub Pages publication of the tubercular M4 progression batch.
+This commit intentionally triggers canonical GitHub Pages publication of the reviewed method-learning M4 progression batch.
