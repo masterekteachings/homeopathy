@@ -81,6 +81,9 @@ jobs:
               'Totality is first defined as the characteristic combination',
               'Tuberculinum enters as a deep constitutional remedy',
               'The tubercular miasm is introduced as a later constitutional pattern',
+              'The course begins by defining Homeopathy through sārūpya siddhānta',
+              'Potentization is introduced as the preparation that reduces crude poisonous material',
+              'Materia Medica is introduced by its source of knowledge',
           ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
