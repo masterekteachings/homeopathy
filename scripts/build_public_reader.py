@@ -136,13 +136,15 @@ replace_required(
 )
 
 # Public builds must generate exactly the learner metadata consumed by the
-# library, full-text search and semantic Explore views. Internal pipeline
-# status generation is intentionally excluded from the Pages artifact.
+# library, passage search, semantic Explore and reviewed teaching progression.
+# Internal pipeline status generation is intentionally excluded from Pages.
 package_path = READER / "package.json"
 package = json.loads(package_path.read_text(encoding="utf-8"))
 package["scripts"]["meta"] = (
     "node scripts/validate-enrichment.mjs && "
+    "node scripts/validate-progressions.mjs && "
     "node scripts/build-enrichment-index.mjs && "
+    "node scripts/build-progression-index.mjs && "
     "node scripts/build-library.mjs && "
     "node scripts/build-search-index.mjs"
 )
