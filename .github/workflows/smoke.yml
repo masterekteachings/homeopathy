@@ -77,6 +77,8 @@ jobs:
               'Развитие учения',
               'Vital force becomes the central dynamic explanation',
               'Psora becomes an organising chronic idea',
+              "The Organon is established as Hahnemann's foundational source-book",
+              'Totality is first defined as the characteristic combination',
           ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
