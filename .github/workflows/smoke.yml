@@ -79,6 +79,8 @@ jobs:
               'Psora becomes an organising chronic idea',
               "The Organon is established as Hahnemann's foundational source-book",
               'Totality is first defined as the characteristic combination',
+              'Tuberculinum enters as a deep constitutional remedy',
+              'The tubercular miasm is introduced as a later constitutional pattern',
           ]
           missing = [item for item in required if item not in deployed_js]
           if missing:
