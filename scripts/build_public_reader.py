@@ -3,7 +3,8 @@
 
 Canonical mode publishes only evidence-backed trilingual Philosophy notes.
 Preview mode can render the complete trilingual draft set at /preview/.
-Internal owner/project UI is removed from the disposable build checkout.
+The owner/project dashboard remains available at the unlinked #/project route;
+it is not advertised in learner navigation.
 """
 from __future__ import annotations
 
@@ -24,13 +25,6 @@ READER = SOURCE / "reader"
 MODE = os.environ.get("MASTER_EK_PUBLICATION_MODE", "final").strip().lower() or "final"
 if MODE not in {"final", "preview"}:
     raise SystemExit(f"unsupported MASTER_EK_PUBLICATION_MODE={MODE!r}")
-
-
-def replace_required(path: Path, old: str, new: str, label: str) -> None:
-    text = path.read_text(encoding="utf-8")
-    if old not in text:
-        raise SystemExit(f"public-build guard failed: {label} marker not found in {path}")
-    path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
 def frontmatter_value(path: Path, key: str) -> str | None:
@@ -110,34 +104,13 @@ for position in range(1, 39):
         for path in note_files(position, directory):
             path.unlink()
 
-# Remove the internal project dashboard from the public application while
-# preserving the learner library, Explore/search and lecture routes.
-app = READER / "src" / "App.tsx"
-replace_required(app, 'import ProjectDashboard from "./components/ProjectDashboard";\n', "", "dashboard import")
-replace_required(app, 'import "./project-dashboard.css";\n', "", "dashboard stylesheet")
-replace_required(
-    app,
-    'type Route =\n  | { view: "library" }\n  | { view: "lecture"; position: number }\n  | { view: "explore"; entityId?: string }\n  | { view: "project" };',
-    'type Route =\n  | { view: "library" }\n  | { view: "lecture"; position: number }\n  | { view: "explore"; entityId?: string };',
-    "project route type",
-)
-replace_required(app, '  if (/^#\\/project\\/?$/.test(hash)) return { view: "project" };\n', "", "project route parser")
-replace_required(
-    app,
-    '''  const shellClass =\n    route.view === "project"\n      ? "app-shell project-shell"\n      : route.view === "library" || route.view === "explore"\n        ? "app-shell library-shell"\n        : "app-shell";''',
-    '  const shellClass =\n    route.view === "library" || route.view === "explore"\n      ? "app-shell library-shell"\n      : "app-shell";',
-    "public learner shell",
-)
-replace_required(
-    app,
-    '      ) : route.view === "project" ? (\n        <ProjectDashboard />\n      ) : (',
-    '      ) : (',
-    "project dashboard render branch",
-)
+# The owner dashboard is deliberately retained in the built application at
+# #/project. It is not linked from the learner library. Keeping the route in the
+# same build lets its lecture telemetry be generated from the exact source
+# revision being published instead of from a separate manually maintained app.
 
-# Public builds must generate exactly the learner metadata consumed by the
-# library, passage search, semantic Explore and reviewed teaching progression.
-# Internal pipeline status generation is intentionally excluded from Pages.
+# Public builds generate learner metadata plus the internal owner pipeline
+# tracker. The tracker is used only by the unlinked #/project route.
 package_path = READER / "package.json"
 package = json.loads(package_path.read_text(encoding="utf-8"))
 package["scripts"]["meta"] = (
@@ -146,7 +119,8 @@ package["scripts"]["meta"] = (
     "node scripts/build-enrichment-index.mjs && "
     "node scripts/build-progression-index.mjs && "
     "node scripts/build-library.mjs && "
-    "node scripts/build-search-index.mjs"
+    "node scripts/build-search-index.mjs && "
+    "node scripts/build-pipeline.mjs"
 )
 package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -177,6 +151,7 @@ status = {
     "source_commit": os.environ.get("SOURCE_COMMIT", ""),
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "languages": ["te", "en", "ru"],
+    "owner_dashboard_route": "#/project",
 }
 if MODE == "final":
     status.update({
@@ -196,3 +171,4 @@ else:
 
 print(f"Public Homeopathy Reader ({MODE}) built from {status['source_commit'][:12] or 'current checkout'}")
 print(f"Trilingual Philosophy coverage: {len(ready)}/38")
+print("Owner dashboard retained at #/project (unlinked from learner navigation)")
