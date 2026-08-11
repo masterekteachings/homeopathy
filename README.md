@@ -6,9 +6,9 @@ Canonical learner site: `https://masterekteachings.github.io/homeopathy/`
 
 Optional noncanonical draft preview: `https://masterekteachings.github.io/homeopathy/preview/`
 
-The canonical Reader is rebuilt from the current production source repository and contains only learner-facing Philosophy bundles whose English, Telugu and Russian notes are all explicitly marked `note_status: complete` after final publication QC. Draft or merely source-checked bundles must not appear at the canonical URL.
+The canonical Reader is rebuilt from the current production source repository and publishes each learner-facing Philosophy bundle as soon as its English, Telugu and Russian notes are all explicitly marked `note_status: complete` after final publication QC. Draft or merely source-checked bundles must not appear at the canonical URL.
 
-The `/preview/` surface may expose the current 38-lecture trilingual draft set for review or urgent access, but it is deliberately noncanonical and must never be used as evidence that a lecture passed final QC.
+The `/preview/` surface may expose the current 38-lecture trilingual draft set for review, but it is deliberately noncanonical and must never be used as evidence that a lecture passed final QC.
 
 Internal transcripts, QC evidence, automation, prompts, provider outputs and the project dashboard are not published here.
 
