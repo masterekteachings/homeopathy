@@ -1,4 +1,4 @@
-name: Validate Homeopathy publication build
+name: Validate Homeopathy publication snapshot
 
 on:
   pull_request:
@@ -9,49 +9,74 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout publication repository
         uses: actions/checkout@v6
 
-      - name: Checkout current production source
-        uses: actions/checkout@v6
-        with:
-          repository: vamsikrishnajallipalli/master-ek-homeo-notes
-          ref: main
-          path: source
-          persist-credentials: false
-
-      - name: Record source commit
-        id: source
-        shell: bash
-        run: echo "sha=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: source/reader/package-lock.json
-
-      - name: Build final-QC-gated learner Reader without deploying
-        env:
-          SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
-          MASTER_EK_PUBLICATION_MODE: final
-        run: python3 scripts/build_public_reader.py source public
-
-      - name: Verify expected learner artifact
+      - name: Validate self-contained final-QC learner release
         shell: bash
         run: |
-          test -f public/index.html
-          test -f public/status.json
+          test -f release/index.html
+          test -f release/status.json
+          test -f release/.publication-manifest.json
           python3 - <<'PY'
+          from __future__ import annotations
+          import hashlib
           import json
           from pathlib import Path
 
-          status = json.loads(Path('public/status.json').read_text(encoding='utf-8'))
+          release = Path('release')
+          status = json.loads((release / 'status.json').read_text(encoding='utf-8'))
+          manifest = json.loads((release / '.publication-manifest.json').read_text(encoding='utf-8'))
+
           assert status['qc_passed_trilingual_philosophy'] == 38, status
           assert status['trilingual_philosophy_total'] == 38, status
-          print('validated 38/38 learner artifact')
+          assert status['publication_surface'] == 'learner-only', status
+          assert status['release_stage'] == 'final-qc-gated', status
+          assert manifest['publication_surface'] == 'learner-only', manifest
+          assert manifest['publication_mode'] == 'final-qc-gated', manifest
+          assert manifest['quality_gate']['qc_passed_trilingual_philosophy'] == 38, manifest
+
+          approved = manifest.get('approved_files', [])
+          expected = {item['path']: item['sha256'] for item in approved}
+          actual_paths = {
+              p.relative_to(release).as_posix()
+              for p in release.rglob('*')
+              if p.is_file() and p.name != '.publication-manifest.json'
+          }
+          if set(expected) != actual_paths:
+              missing = sorted(set(expected) - actual_paths)
+              extra = sorted(actual_paths - set(expected))
+              raise SystemExit(f'manifest/file mismatch missing={missing} extra={extra}')
+
+          for rel, expected_sha in expected.items():
+              actual_sha = hashlib.sha256((release / rel).read_bytes()).hexdigest()
+              if actual_sha != expected_sha:
+                  raise SystemExit(f'hash mismatch for {rel}')
+
+          forbidden = (
+              'ProjectDashboard',
+              'owner_dashboard_route',
+              '#/project',
+              'raw.githubusercontent.com/vamsikrishnajallipalli/master-ek-homeo-notes',
+              'VAMSI_AI_MODUS_OPERANDI',
+              'PROJECT_STATE.md',
+              'D72_RUNTIME',
+          )
+          for path in release.rglob('*'):
+              if not path.is_file() or path.suffix.lower() not in {'.html', '.js', '.css', '.json', '.map'}:
+                  continue
+              if path.name == '.publication-manifest.json':
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              for marker in forbidden:
+                  if marker in text:
+                      raise SystemExit(f'internal marker {marker!r} found in {path}')
+
+          print('validated self-contained learner-only 38/38 publication snapshot')
           PY
