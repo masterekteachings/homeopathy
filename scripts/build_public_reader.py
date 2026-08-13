@@ -3,8 +3,8 @@
 
 Canonical mode publishes only evidence-backed trilingual Philosophy notes.
 Preview mode can render the complete trilingual draft set at /preview/.
-The owner/project dashboard remains available at the unlinked #/project route;
-it is not advertised in learner navigation.
+The public build is learner-only: internal dashboards, telemetry and production
+machinery are removed before the Reader is built.
 """
 from __future__ import annotations
 
@@ -104,25 +104,10 @@ for position in range(1, 39):
         for path in note_files(position, directory):
             path.unlink()
 
-# The owner dashboard is deliberately retained in the built application at
-# #/project. It is not linked from the learner library. Keeping the route in the
-# same build lets its lecture telemetry be generated from the exact source
-# revision being published instead of from a separate manually maintained app.
-
-# Public builds generate learner metadata plus the internal owner pipeline
-# tracker. The tracker is used only by the unlinked #/project route.
-package_path = READER / "package.json"
-package = json.loads(package_path.read_text(encoding="utf-8"))
-package["scripts"]["meta"] = (
-    "node scripts/validate-enrichment.mjs && "
-    "node scripts/validate-progressions.mjs && "
-    "node scripts/build-enrichment-index.mjs && "
-    "node scripts/build-progression-index.mjs && "
-    "node scripts/build-library.mjs && "
-    "node scripts/build-search-index.mjs && "
-    "node scripts/build-pipeline.mjs"
-)
-package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+prepare_script = SOURCE / "scripts" / "prepare_public_reader.py"
+if not prepare_script.exists():
+    raise SystemExit(f"missing learner-only publication preparer: {prepare_script}")
+subprocess.run([sys.executable, str(prepare_script), str(SOURCE)], check=True)
 
 (READER / "vite.config.ts").write_text(
     "import { defineConfig } from 'vite'\n"
@@ -151,7 +136,7 @@ status = {
     "source_commit": os.environ.get("SOURCE_COMMIT", ""),
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "languages": ["te", "en", "ru"],
-    "owner_dashboard_route": "#/project",
+    "publication_surface": "learner-only",
 }
 if MODE == "final":
     status.update({
@@ -169,6 +154,23 @@ else:
     })
 (OUT / "status.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
 
+for forbidden in (
+    "ProjectDashboard",
+    "owner_dashboard_route",
+    "raw.githubusercontent.com/vamsikrishnajallipalli/master-ek-homeo-notes",
+    "#/project",
+    "VAMSI_AI_MODUS_OPERANDI",
+):
+    for path in OUT.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in {".html", ".js", ".css", ".json", ".map"}:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        if forbidden in text:
+            raise SystemExit(f"forbidden internal publication marker {forbidden!r} in {path}")
+
 print(f"Public Homeopathy Reader ({MODE}) built from {status['source_commit'][:12] or 'current checkout'}")
 print(f"Trilingual Philosophy coverage: {len(ready)}/38")
-print("Owner dashboard retained at #/project (unlinked from learner navigation)")
+print("Learner-only publication surface verified")
