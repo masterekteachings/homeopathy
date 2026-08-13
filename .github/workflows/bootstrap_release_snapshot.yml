@@ -1,0 +1,143 @@
+name: Bootstrap self-contained learner release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bootstrap-release-snapshot
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout publication repository
+        uses: actions/checkout@v6
+
+      - name: Detect existing self-contained snapshot
+        id: snapshot
+        shell: bash
+        run: |
+          if [[ -f release/.publication-manifest.json && -f release/index.html ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Self-contained release already exists; bootstrap has nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout production source for one-time bootstrap
+        if: steps.snapshot.outputs.exists != 'true'
+        uses: actions/checkout@v6
+        with:
+          repository: vamsikrishnajallipalli/master-ek-homeo-notes
+          ref: main
+          path: source
+          persist-credentials: false
+
+      - name: Record exact source commit
+        if: steps.snapshot.outputs.exists != 'true'
+        id: source
+        shell: bash
+        run: echo "sha=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        if: steps.snapshot.outputs.exists != 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: source/reader/package-lock.json
+
+      - name: Build final-QC-gated learner-only snapshot
+        if: steps.snapshot.outputs.exists != 'true'
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
+          MASTER_EK_PUBLICATION_MODE: final
+        shell: bash
+        run: python3 scripts/build_public_reader.py source release
+
+      - name: Write release manifest and hashes
+        if: steps.snapshot.outputs.exists != 'true'
+        env:
+          SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
+          BUILDER_COMMIT: ${{ github.sha }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+          import datetime as dt
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          release = Path('release')
+          status = json.loads((release / 'status.json').read_text(encoding='utf-8'))
+          approved = []
+          digest = hashlib.sha256()
+          for path in sorted(p for p in release.rglob('*') if p.is_file() and p.name != '.publication-manifest.json'):
+              data = path.read_bytes()
+              rel = path.relative_to(release).as_posix()
+              sha = hashlib.sha256(data).hexdigest()
+              approved.append({'path': rel, 'sha256': sha, 'bytes': len(data)})
+              digest.update(rel.encode('utf-8'))
+              digest.update(b'\0')
+              digest.update(sha.encode('ascii'))
+              digest.update(b'\n')
+
+          manifest = {
+              'schema_version': 1,
+              'generated_at': dt.datetime.now(dt.timezone.utc).isoformat(),
+              'source_repository': 'vamsikrishnajallipalli/master-ek-homeo-notes',
+              'source_commit': os.environ['SOURCE_COMMIT'],
+              'builder_repository': 'masterekteachings/homeopathy',
+              'builder_commit': os.environ['BUILDER_COMMIT'],
+              'publication_mode': 'final-qc-gated',
+              'publication_surface': 'learner-only',
+              'quality_gate': {
+                  'qc_passed_trilingual_philosophy': status.get('qc_passed_trilingual_philosophy'),
+                  'trilingual_philosophy_total': status.get('trilingual_philosophy_total'),
+                  'positions': status.get('qc_passed_trilingual_philosophy_positions', []),
+              },
+              'explicit_exclusions': [
+                  'internal project dashboard and telemetry',
+                  'production state/runbooks/governance',
+                  'raw transcripts/source audio',
+                  'unfinished or non-final learner artifacts',
+                  'personal collaboration doctrine',
+              ],
+              'approved_files': approved,
+              'snapshot_hash': digest.hexdigest(),
+              'public_commit_evidence': 'The Git commit that introduces this manifest is the public release commit; deployment verification is recorded by GitHub Actions.',
+          }
+          (release / '.publication-manifest.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Fail closed on internal markers
+        if: steps.snapshot.outputs.exists != 'true'
+        shell: bash
+        run: |
+          if grep -R -n -E 'ProjectDashboard|owner_dashboard_route|#/project|VAMSI_AI_MODUS_OPERANDI|raw\.githubusercontent\.com/vamsikrishnajallipalli/master-ek-homeo-notes|D72_RUNTIME|PROJECT_STATE\.md' release; then
+            echo 'Internal-only marker detected in release snapshot.' >&2
+            exit 1
+          fi
+
+      - name: Commit self-contained release snapshot
+        if: steps.snapshot.outputs.exists != 'true'
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add release
+          git diff --cached --exit-code && { echo 'No release changes to commit.'; exit 0; }
+          git commit -m "Bootstrap self-contained learner release"
+          git push
