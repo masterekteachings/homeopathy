@@ -26,7 +26,29 @@ jobs:
       - name: Checkout publication repository
         uses: actions/checkout@v6
 
-      - name: Checkout current production source
+      - name: Detect self-contained release snapshot
+        id: snapshot
+        shell: bash
+        run: |
+          if [[ -f release/.publication-manifest.json && -f release/index.html ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Using committed public release snapshot; private source checkout is not required."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "No committed release snapshot yet; retaining legacy source-build path during cutover."
+          fi
+
+      - name: Stage committed release snapshot
+        if: steps.snapshot.outputs.available == 'true'
+        shell: bash
+        run: |
+          rm -rf public
+          cp -R release public
+          test -f public/index.html
+          test -f public/.publication-manifest.json
+
+      - name: Checkout current production source (legacy cutover fallback)
+        if: steps.snapshot.outputs.available != 'true'
         uses: actions/checkout@v6
         with:
           repository: vamsikrishnajallipalli/master-ek-homeo-notes
@@ -35,11 +57,13 @@ jobs:
           persist-credentials: false
 
       - name: Record source commit
+        if: steps.snapshot.outputs.available != 'true'
         id: source
         shell: bash
         run: echo "sha=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node
+        if: steps.snapshot.outputs.available != 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '22'
@@ -47,6 +71,7 @@ jobs:
           cache-dependency-path: source/reader/package-lock.json
 
       - name: Build noncanonical 38-lecture preview
+        if: steps.snapshot.outputs.available != 'true'
         env:
           SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
           MASTER_EK_PUBLICATION_MODE: preview
@@ -81,12 +106,14 @@ jobs:
           PY
 
       - name: Build final-QC-gated learner-facing Reader
+        if: steps.snapshot.outputs.available != 'true'
         env:
           SOURCE_COMMIT: ${{ steps.source.outputs.sha }}
           MASTER_EK_PUBLICATION_MODE: final
         run: python3 scripts/build_public_reader.py source public
 
       - name: Add noncanonical preview to Pages artifact
+        if: steps.snapshot.outputs.available != 'true'
         shell: bash
         run: |
           mkdir -p public/preview
