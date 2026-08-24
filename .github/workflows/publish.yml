@@ -34,14 +34,29 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
+
           manifest = json.loads(Path('release/.publication-manifest.json').read_text(encoding='utf-8'))
           if manifest.get('publication_surface') != 'learner-only':
               raise SystemExit('release is not marked learner-only')
-          if manifest.get('publication_mode') != 'final-qc-gated':
-              raise SystemExit('release is not final-QC-gated')
+
+          mode = manifest.get('publication_mode')
+          if mode not in {'final-qc-gated', 'incremental-core-final-qc-gated'}:
+              raise SystemExit(f'release publication_mode is not approved: {mode!r}')
+
           quality = manifest.get('quality_gate') or {}
-          if quality.get('qc_passed_trilingual_philosophy') != 38:
+          philosophy_positions = quality.get('philosophy_positions') or []
+          philosophy_ok = quality.get('philosophy_38_38') is True and philosophy_positions == list(range(1, 39))
+          legacy_ok = quality.get('qc_passed_trilingual_philosophy') == 38
+          if not (philosophy_ok or legacy_ok):
               raise SystemExit('release does not contain the verified 38/38 Philosophy set')
+
+          materia_positions = quality.get('materia_positions') or []
+          if len(materia_positions) != len(set(materia_positions)):
+              raise SystemExit('Materia positions contain duplicates')
+          if any(not isinstance(p, int) or p < 39 or p > 117 for p in materia_positions):
+              raise SystemExit('Materia position outside expected lecture range')
+
+          print(f'Approved learner release: Philosophy 38/38, Materia {len(materia_positions)}')
           PY
 
       - name: Stage committed release snapshot
