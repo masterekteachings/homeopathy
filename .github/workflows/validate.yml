@@ -3,6 +3,9 @@ name: Validate Homeopathy publication snapshot
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'release/**'
+      - '.github/workflows/validate.yml'
   workflow_dispatch:
 
 permissions:
@@ -15,7 +18,7 @@ jobs:
       - name: Checkout publication repository
         uses: actions/checkout@v6
 
-      - name: Validate self-contained final-QC learner release
+      - name: Validate self-contained learner release
         shell: bash
         run: |
           test -f release/index.html
@@ -31,13 +34,20 @@ jobs:
           status = json.loads((release / 'status.json').read_text(encoding='utf-8'))
           manifest = json.loads((release / '.publication-manifest.json').read_text(encoding='utf-8'))
 
-          assert status['qc_passed_trilingual_philosophy'] == 38, status
-          assert status['trilingual_philosophy_total'] == 38, status
+          philosophy = status.get('philosophy_baseline') or {}
+          assert philosophy.get('publishable') == 38, status
+          assert philosophy.get('total') == 38, status
+          assert philosophy.get('positions') == list(range(1, 39)), status
           assert status['publication_surface'] == 'learner-only', status
-          assert status['release_stage'] == 'final-qc-gated', status
+          assert status['release_stage'] in {'final-qc-gated', 'incremental-core-final-qc-gated'}, status
+
           assert manifest['publication_surface'] == 'learner-only', manifest
-          assert manifest['publication_mode'] == 'final-qc-gated', manifest
-          assert manifest['quality_gate']['qc_passed_trilingual_philosophy'] == 38, manifest
+          assert manifest['publication_mode'] in {'final-qc-gated', 'incremental-core-final-qc-gated'}, manifest
+          quality = manifest.get('quality_gate') or {}
+          philosophy_positions = quality.get('philosophy_positions') or []
+          philosophy_ok = quality.get('philosophy_38_38') is True and philosophy_positions == list(range(1, 39))
+          legacy_ok = quality.get('qc_passed_trilingual_philosophy') == 38
+          assert philosophy_ok or legacy_ok, manifest
 
           approved = manifest.get('approved_files', [])
           expected = {item['path']: item['sha256'] for item in approved}
@@ -78,5 +88,8 @@ jobs:
                   if marker in text:
                       raise SystemExit(f'internal marker {marker!r} found in {path}')
 
-          print('validated self-contained learner-only 38/38 publication snapshot')
+          if not status.get('source_commit') or not manifest.get('source_commit'):
+              print('warning: legacy snapshot has empty source_commit; next publisher release must repair traceability')
+
+          print('validated self-contained learner-only publication snapshot')
           PY

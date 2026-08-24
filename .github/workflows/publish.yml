@@ -3,9 +3,9 @@ name: Publish Homeopathy learning reader
 on:
   push:
     branches: [main]
+    paths:
+      - 'release/**'
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
 
 permissions:
   contents: read
