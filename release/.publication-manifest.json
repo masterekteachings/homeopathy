@@ -1,8 +1,8 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-08-24T18:57:13.621011+00:00",
+  "generated_at": "2026-08-25T02:47:47.607135+00:00",
   "source_logical_repository": "master-ek-learning-library-private-factory",
-  "source_commit": "41de81954d6303da5fdf8647a8b6e05ea3e9531e",
+  "source_commit": "ab1563db2fdb0d8458dd0a788b3a6b4fa47915b6",
   "builder": "scripts/build_public_release_snapshot_core.py",
   "publication_mode": "incremental-core-final-qc-gated",
   "publication_surface": "learner-only",
@@ -1451,7 +1451,7 @@
     },
     {
       "path": "status.json",
-      "sha256": "5c58118457e389453d4e9c85887f3a55b5e3fd5322e56729568d7e9372c47ac5",
+      "sha256": "5b8f7a05741924b8367a72b72fa9a6c67e6f9c524a61a84b573e16b3c7d81d6b",
       "bytes": 1045
     },
     {
@@ -1460,6 +1460,6 @@
       "bytes": 3
     }
   ],
-  "snapshot_hash": "63772c367bf6a62b03fff44b5c4d7228add7387b82a232820f6f5333acf4fd1f",
+  "snapshot_hash": "7437aee51837fd2925b109f8b3f645d342f8c0f541bbe702b3e69a2cce972208",
   "public_commit_evidence": "Public commit/deployment SHA is recorded by the local publisher after this snapshot is pushed."
 }
