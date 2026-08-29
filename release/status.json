@@ -1,8 +1,8 @@
 {
   "collection": "homeopathy",
   "source_system": "private Master E.K. Learning Library factory",
-  "source_commit": "a7d061fb54ae8d290b0e7d0234d0f6576bd05632",
-  "generated_at": "2026-08-28T20:52:34.467526+00:00",
+  "source_commit": "7b73a319480db16b0b2bf1a706fccb4b0d72488a",
+  "generated_at": "2026-08-29T01:08:18.706091+00:00",
   "languages": [
     "en",
     "te",
@@ -56,7 +56,7 @@
     ]
   },
   "materia_publishable": {
-    "count": 9,
+    "count": 10,
     "positions": [
       39,
       40,
@@ -66,6 +66,7 @@
       65,
       67,
       79,
+      86,
       88
     ]
   },
