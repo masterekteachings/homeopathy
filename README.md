@@ -1,32 +1,78 @@
-# Homeopathy Classes — Master E.K. Teachings
+# Master E.K. Homeopathy Teachings
 
-Public learner-facing publication of the Homeopathy teaching collection.
+**A multilingual digital learning library built from the recorded homoeopathy classes of Ekkirala Krishnamacharya, widely known as Master E.K.**
 
-Canonical learner site: `https://masterekteachings.github.io/homeopathy/`
+➡️ **Start learning:** https://masterekteachings.github.io/homeopathy/
 
-Owner project command center: `https://masterekteachings.github.io/homeopathy/#/project` (unlinked from learner navigation)
+This repository is the **public, learner-facing publication layer** of the Master E.K. Learning Library. It turns a large recorded teaching corpus into a calm, searchable and source-grounded study experience while preserving the sequence, terminology, examples and reasoning of the original classes.
 
-Optional noncanonical draft preview: `https://masterekteachings.github.io/homeopathy/preview/`
+> **Study and historical reference only. This library is not medical advice and is not a substitute for professional medical care.**
 
-The canonical Reader is rebuilt from the current production source repository and publishes each learner-facing Philosophy bundle only after its English, Telugu and Russian notes are all explicitly marked `note_status: complete` after final publication QC. Draft or merely source-checked bundles do not appear as learner lecture rows at the canonical URL.
+## What is this project?
 
-The learner homepage may identify an upcoming teaching series, but unfinished lecture rows are not exposed in the canonical Reader. First-time visitors open the Reader in English; an explicitly selected Telugu or Russian preference is remembered. Page-color preferences, reading-language preference and core navigation are shared across the learner site. Homepage language selection visibly localizes learner-facing interface copy and lecture topic cues while preserving the source course identifiers. Browser metadata is learner-facing as well. Lecture pages include a quiet multilingual "In this lecture" outline derived directly from the selected note's section headings, with Previous/Next navigation retained for sequential study.
+Master E.K.'s homoeopathy teachings exist across a substantial collection of recorded classes. The aim of this project is to make those classes easier to study without reducing them to short summaries or disconnected quotations.
 
-The `/preview/` surface may expose work that has not yet passed the canonical publication gate; it must never be used as evidence that a lecture passed final QC.
+The complete Homeopathy collection currently being organised covers **117 classes** in the original teaching order:
 
-Internal transcripts, QC evidence, automation, prompts and provider outputs are not published as learner content. The owner command center is deliberately retained at the unlinked `#/project` route so project milestones, repository-derived lecture telemetry, blockers, inactive lanes, branch hygiene and next actions can be inspected from the same deployed source revision without adding project-control links to the learner interface.
+| Series | Classes |
+|---|---:|
+| Junior Philosophy | 13 |
+| Senior Philosophy | 25 |
+| Materia Medica | 79 |
+| **Total** | **117** |
 
-## Publication model
+The Reader publishes only classes that have passed the project's source-fidelity and review gates. The live site therefore shows the **currently accepted learner release**, while the remaining corpus continues through production and review.
 
-`vamsikrishnajallipalli/master-ek-homeo-notes` remains the production/source repository. This repository acts as the clean publication surface.
+## What does a learner get?
 
-The Pages workflow can be run manually and also checks for new production changes on a schedule. Each build:
+The learning experience is designed around four complementary views:
 
-1. checks out the current production `main`;
-2. validates the curated multilingual enrichment evidence and generates the derived enrichment/search/progression indexes;
-3. generates the owner lecture-pipeline telemetry used only by the unlinked `#/project` route;
-4. builds the noncanonical `/preview/` from the available trilingual draft set;
-5. removes every non-final Philosophy bundle from the canonical learner release unless EN+TE+RU all say `note_status: complete` and accepted final evidence exists;
-6. retains the owner project-control route without exposing it in learner navigation;
-7. publishes the canonical Reader at `/homeopathy/` and the draft preview at `/homeopathy/preview/`;
-8. writes canonical `status.json`, including the source commit and owner-dashboard route, so publication state remains inspectable.
+- **Synopsis** — a structured study companion that helps a learner understand and revise the class;
+- **Notes** — the complete faithful class text, preserving the teaching rather than compressing it into a summary;
+- **Watch / Listen** — the source recording where available and authorised;
+- **Explore** — progressively richer links between concepts, remedies, symptoms, people, texts and related lectures.
+
+The project is multilingual. Current production and publication work includes **English, Telugu, Russian, French, German and Dutch/Flemish**, with release requirements varying by stage as the corpus matures.
+
+## What are we trying to preserve?
+
+The goal is not to rewrite Master E.K. into a modern textbook voice. A trustworthy learner edition should preserve, where present in the source:
+
+- the reasoning and order in which a subject is taught;
+- definitions and distinctions;
+- examples, cases and analogies;
+- remedy, symptom and concept relationships;
+- Sanskrit, Telugu, English and other terminology used in the class;
+- references to people, books and scriptures;
+- useful audience interaction;
+- humour, turns of phrase and teaching personality when they carry learning value.
+
+Sequence is part of the teaching, not merely packaging.
+
+## How is trust handled?
+
+A file existing in the repository is **not** enough for publication.
+
+The production system separates source evidence, reconciled class text, learner artifacts, editorial review and independent QC. A class becomes learner-visible only after the applicable publication gate has passed. Genuine uncertainty is preserved or escalated rather than silently invented away.
+
+The public site is intentionally separated from the private production factory so internal prompts, model/provider outputs, raw working files, QC machinery and operational telemetry do not become learner content.
+
+## Public architecture
+
+- **This repository:** clean public release surface for the Homeopathy collection
+- **Live Reader:** https://masterekteachings.github.io/homeopathy/
+- **Broader project:** Master E.K. Learning Library, designed to support additional teaching collections over time
+
+The source playlist ordering is preserved so a learner can study the corpus sequentially rather than encountering an algorithmically rearranged set of excerpts.
+
+## For maintainers
+
+The production/source repository is separate from this public repository. Publication creates a sanitized learner snapshot after the relevant acceptance gates pass.
+
+The current publication pipeline validates the learner release, removes non-final lecture bundles from the canonical site, generates the Reader assets and records publication state. Draft/preview artifacts are never evidence that a lecture has passed final QC.
+
+If you are working on the production system, use the project nerve-centre documents in the private factory rather than this README for current runtime status and changing acceptance counts.
+
+---
+
+**Master E.K. Learning Library** — preserving recorded teaching as a trustworthy, multilingual learning corpus.
