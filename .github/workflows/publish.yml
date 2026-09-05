@@ -1,6 +1,10 @@
 name: Publish Homeopathy learning reader
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'release/**'
   workflow_dispatch:
 
 permissions:
