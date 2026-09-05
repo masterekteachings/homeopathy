@@ -1,15 +1,6 @@
 name: Smoke test canonical Homeopathy Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'release/**'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'release/**'
-      - '.github/workflows/smoke.yml'
   workflow_dispatch:
 
 permissions:
