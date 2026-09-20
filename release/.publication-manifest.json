@@ -1,8 +1,8 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-09-20T02:28:24.218693+00:00",
+  "generated_at": "2026-09-20T09:40:36.802951+00:00",
   "source_logical_repository": "master-ek-learning-library-private-factory",
-  "source_commit": "238ea9c3ecf7cc835fbcdaa32b5380876ad34b8a",
+  "source_commit": "ce97c3f9d88ab271f6c4d2bc5267631b3df411f3",
   "builder": "scripts/build_public_release_snapshot_core.py",
   "builder_git_blob": "71db14620702f4ccbd38aaf881f6b27218382738",
   "publication_mode": "incremental-core-final-qc-gated",
@@ -68,6 +68,7 @@
       82,
       86,
       88,
+      102,
       105,
       107
     ],
@@ -1114,6 +1115,21 @@
       "bytes": 14627
     },
     {
+      "path": "assets/102-materia-medica-pulsatilla-6-BdkNgDlX.js",
+      "sha256": "924282816ba83eebf563addf930288048606314dd033ed861167262990538a93",
+      "bytes": 12779
+    },
+    {
+      "path": "assets/102-materia-medica-pulsatilla-6-D2XI3HB4.js",
+      "sha256": "33d87d879801c723515c7970ddb3fe4037fb18e3be4eeac76f8b1236bb06dd0e",
+      "bytes": 27404
+    },
+    {
+      "path": "assets/102-materia-medica-pulsatilla-6-DTJ1uzsj.js",
+      "sha256": "3a2c812dd45136929cd27f2c410d06c757a051ba10620a7d7a81b42e608fc419",
+      "bytes": 29169
+    },
+    {
       "path": "assets/105-materia-medica-rhus-tox-1-BZlzueh4.js",
       "sha256": "8e8b25cf9ffbc9f928fb3092ddd1340cd2ddadefd44e3f6fa03c0329d42f3a30",
       "bytes": 17499
@@ -1164,8 +1180,8 @@
       "bytes": 2964
     },
     {
-      "path": "assets/abnfDiagram-N423BO3Z-Det3s_27.js",
-      "sha256": "aa85fe683eab6fb7050092666dd3c86cc8c99c1b4c9df208ddfaddfbe5a196ff",
+      "path": "assets/abnfDiagram-N423BO3Z-B38DFr7o.js",
+      "sha256": "8fc462d4fa1868e7e86f819c990c1a3c243d182c233fc62fac0ed869c1815da9",
       "bytes": 1849
     },
     {
@@ -1179,8 +1195,8 @@
       "bytes": 131
     },
     {
-      "path": "assets/architectureDiagram-T3A2C74G-CIS0qNMv.js",
-      "sha256": "5aa6c7e798cb100fdf32a5ba1c22e95ab563a6f3d276ae2e3df8c939c4e8d094",
+      "path": "assets/architectureDiagram-T3A2C74G-BOOZ-ogq.js",
+      "sha256": "fc0b1ea5205aebc032e6c84b3f55e64866ec50a7394fe9df13401b54f41a83a2",
       "bytes": 148882
     },
     {
@@ -1219,8 +1235,8 @@
       "bytes": 5833
     },
     {
-      "path": "assets/chunk-5RXB4S5H-jQkO22yu.js",
-      "sha256": "abccc3e4b68bb1a9e830374d3ea65f253f6fa3a2c8fa8f30739e2eee19a15f37",
+      "path": "assets/chunk-5RXB4S5H-DXHK5qMJ.js",
+      "sha256": "7cf6c588d1aac15adaf62c6ed47b17b9a23dd3971d50612046979a5c4e8e9a10",
       "bytes": 37673
     },
     {
@@ -1229,8 +1245,8 @@
       "bytes": 362
     },
     {
-      "path": "assets/chunk-6Q2QTUOP-DZvA3jFC.js",
-      "sha256": "d4f89c203ba36868fd4e8d1c1f88cd912315639fe12473675fa2f8053dde9d7c",
+      "path": "assets/chunk-6Q2QTUOP-Cx8LBfXy.js",
+      "sha256": "202eb217a2bd5bd2dd4489cfbf6010df2fc3040045aabd4c0b91f828aaff319b",
       "bytes": 15637
     },
     {
@@ -1239,8 +1255,8 @@
       "bytes": 2105
     },
     {
-      "path": "assets/chunk-GF5L2VYU-Dgvgxcbn.js",
-      "sha256": "c577b6bdcd40d46fda39f8598357b70ad824144ce8046669d3e99109f870bc47",
+      "path": "assets/chunk-GF5L2VYU-BJtQ9pUv.js",
+      "sha256": "1bfcb34b70ee219653b1b496c9b56dff05cf105c1542ad974756e5d6725ba897",
       "bytes": 48776
     },
     {
@@ -1249,8 +1265,8 @@
       "bytes": 236100
     },
     {
-      "path": "assets/chunk-JQJVKLGR-CuuFcJnb.js",
-      "sha256": "ae256469d80175a4dde910955c6e96fe97815913c38cfeabb71f121684bd5366",
+      "path": "assets/chunk-JQJVKLGR-CNTX8RhD.js",
+      "sha256": "2e2414042ce89da9a3b3e9d7d97c12b01f275f883f7aba03f351d5c5b3e54e80",
       "bytes": 60104
     },
     {
@@ -1309,13 +1325,13 @@
       "bytes": 155
     },
     {
-      "path": "assets/classDiagram-JCYQIIEL-CF_mjqPv.js",
-      "sha256": "9b8f46af8c9804a2477c68e55dc452e00dcad711c143a94a72cd13ed711b677e",
+      "path": "assets/classDiagram-JCYQIIEL-BLa7PYLw.js",
+      "sha256": "434eb37530a1967c8b5f8c6ee8391aee25920a3e5ebc790dc717dd8ed6b37ffd",
       "bytes": 734
     },
     {
-      "path": "assets/classDiagram-v2-OCEON4UE-CF_mjqPv.js",
-      "sha256": "9b8f46af8c9804a2477c68e55dc452e00dcad711c143a94a72cd13ed711b677e",
+      "path": "assets/classDiagram-v2-OCEON4UE-BLa7PYLw.js",
+      "sha256": "434eb37530a1967c8b5f8c6ee8391aee25920a3e5ebc790dc717dd8ed6b37ffd",
       "bytes": 734
     },
     {
@@ -1329,8 +1345,8 @@
       "bytes": 126
     },
     {
-      "path": "assets/cynefinDiagram-MW4NZA55-D7iNQWGe.js",
-      "sha256": "6a0290d50871d51d01f83e0b243489ada67cc0a63e1255a62a7f1814fe02fdb4",
+      "path": "assets/cynefinDiagram-MW4NZA55-Drj2t-tK.js",
+      "sha256": "0d134fcec0f5ec9bdb6a16a2a2d4036822f644c73d25d5ce85eb6eadf31e979c",
       "bytes": 9931
     },
     {
@@ -1344,8 +1360,8 @@
       "bytes": 32064
     },
     {
-      "path": "assets/dagre-VZM6K2ZE-Ca9kEiKD.js",
-      "sha256": "0738feac54758ea0d5e5d60f68efae0d9d21891346ac1cafeb05fe396fa9aa1a",
+      "path": "assets/dagre-VZM6K2ZE-Da35cD-T.js",
+      "sha256": "2086b504173f5c6f41110892b0a1e80874133816b5a4c411f1918461c9cc2ec2",
       "bytes": 8801
     },
     {
@@ -1354,8 +1370,8 @@
       "bytes": 4634
     },
     {
-      "path": "assets/diagram-7IWD3JNH-C5ZcaE5S.js",
-      "sha256": "71b108509b638b1c1f89664abde35071aea260bccf384eab73a913fad15c849b",
+      "path": "assets/diagram-7IWD3JNH-Di87ZsW2.js",
+      "sha256": "e5419b50d2de09cb40671c7ac08fe441bb26769fda50f2f22593ec24a28a8c1a",
       "bytes": 8306
     },
     {
@@ -1364,18 +1380,18 @@
       "bytes": 10661
     },
     {
-      "path": "assets/diagram-LBJQPF4R-DqwpKsNY.js",
-      "sha256": "6e64b62651423c3cecb624a94432d21a65a0d7834b0c64da257772be9f41f782",
+      "path": "assets/diagram-LBJQPF4R-BN09PBLN.js",
+      "sha256": "090b510e4215df41a19f227f683e4160bc793e424e0f459cc3c0bd54676fb7a8",
       "bytes": 4273
     },
     {
-      "path": "assets/diagram-Q27KOJAE-DNJzZPM7.js",
-      "sha256": "11503f2a88557fe29187929d6e9fbfbb8b1daa057846928a23289251ef018083",
+      "path": "assets/diagram-Q27KOJAE-Dk32T05J.js",
+      "sha256": "39cf7bc3df7b8117cd36dbd17f61d6a653ba31fe862fdd3812578faa24691aa4",
       "bytes": 15743
     },
     {
-      "path": "assets/diagram-UB23O5K3-BynuXd5T.js",
-      "sha256": "29e11a60533f9d26f3dd5fd57d895efc57fa5d7cb3892dda424e70b5a026107a",
+      "path": "assets/diagram-UB23O5K3-DbVPzh-c.js",
+      "sha256": "a9ade3b0b0fe47b30613068f0fa7215cf659058254e980b661dfd17118cb4bc6",
       "bytes": 6062
     },
     {
@@ -1384,13 +1400,13 @@
       "bytes": 2160
     },
     {
-      "path": "assets/ebnfDiagram-BXEA7PRR-xGHONgSQ.js",
-      "sha256": "90c27a0d81fdeeddbd2aee35c2bb4172844fced0f7d5947dd68426c324c1065b",
+      "path": "assets/ebnfDiagram-BXEA7PRR-izHJlBlE.js",
+      "sha256": "739c812ae03b3a5c274d202dae0c85326d06aae6251741752f13c3c629b88772",
       "bytes": 2062
     },
     {
-      "path": "assets/erDiagram-JOGREHBK-DtobzeMT.js",
-      "sha256": "3cd14266ee863c76517620e0d1c31e29b745b4b6c9bf7c0e7939d2bb92f2bbbf",
+      "path": "assets/erDiagram-JOGREHBK-B0Ed8hro.js",
+      "sha256": "75377e4691ce4ebddc78427486e2fe3c904f2d87f4f51713e959691f0ca4f941",
       "bytes": 27054
     },
     {
@@ -1399,8 +1415,8 @@
       "bytes": 132
     },
     {
-      "path": "assets/flowDiagram-UKHOOZJN-b4OU5mDM.js",
-      "sha256": "37263effe227ae37dc839cff1bc41cecb4c246320a202791317d9fded16b45d4",
+      "path": "assets/flowDiagram-UKHOOZJN-DkHp3FDC.js",
+      "sha256": "c60076cfe9c6d68c67338d38c317e1ef4e0bb2019cf10bf77de2e21fce2b88a5",
       "bytes": 531
     },
     {
@@ -1424,14 +1440,14 @@
       "bytes": 23904
     },
     {
-      "path": "assets/index-1yIjP4CP.js",
-      "sha256": "8fa92734b26c97954d59ed5f3204aaa3fea9b0252d2d1fa22970f82eb6286b2c",
-      "bytes": 4032696
-    },
-    {
       "path": "assets/index-CLdET7Ft.css",
       "sha256": "f69a5f742d2fcb83e59b2e382f0f145232e23c4e36a9f311cbbf9fed3cb78a3c",
       "bytes": 26009
+    },
+    {
+      "path": "assets/index-Dkf-pxjX.js",
+      "sha256": "d602b4197df77b1325f7d836e8e755a4857a6bb26bf7a680b1c56d8fc6f3c1bb",
+      "bytes": 4033511
     },
     {
       "path": "assets/info-DKCQHKI2-CDXHscso.js",
@@ -1439,8 +1455,8 @@
       "bytes": 123
     },
     {
-      "path": "assets/infoDiagram-6WML65LV-zIg7kmzK.js",
-      "sha256": "ffda8ee5ba103ab063046f83db6100f3e09eb09a9ac31ba4aacd02d51404de38",
+      "path": "assets/infoDiagram-6WML65LV-CPLJ5BNs.js",
+      "sha256": "2376e6af5677f3552967b47749e5f52376760f76e05aebdae1a33e6230f5ef22",
       "bytes": 649
     },
     {
@@ -1449,8 +1465,8 @@
       "bytes": 140
     },
     {
-      "path": "assets/ishikawaDiagram-WSZJBQD7-CongGglF.js",
-      "sha256": "c41e55b71d405cb31f363fe596732d6f27f9519cdb5a673771805d3969147e75",
+      "path": "assets/ishikawaDiagram-WSZJBQD7-xG0Vaufe.js",
+      "sha256": "7a86630804af0bc25ef76fb23ab9e92862b529d0c65f6f36095524c11b99275e",
       "bytes": 17304
     },
     {
@@ -1459,8 +1475,8 @@
       "bytes": 23157
     },
     {
-      "path": "assets/kanban-definition-27J2QSJJ-C-xJYuLC.js",
-      "sha256": "6835765b0a5b6c66d96cb2927286f6f16de1324fa336e18ad9db32fb1c3787c0",
+      "path": "assets/kanban-definition-27J2QSJJ-Dcd15Czc.js",
+      "sha256": "66c5781093e5edabf6178610fb2c7bf59b384e7222608d8a129f52cc863d2f99",
       "bytes": 20214
     },
     {
@@ -1489,8 +1505,8 @@
       "bytes": 16596
     },
     {
-      "path": "assets/mindmap-definition-FAOFIHXS-DcjwxwS0.js",
-      "sha256": "e7d5086831ce73b641c45065632995ac540ce4740a2cdbc57b68625441d84d09",
+      "path": "assets/mindmap-definition-FAOFIHXS-DjJB2p9v.js",
+      "sha256": "df632b454bcf5c22ac496e84baf0f302e4df294716add62a9a3d9a98a7a762a6",
       "bytes": 23397
     },
     {
@@ -1509,8 +1525,8 @@
       "bytes": 2278
     },
     {
-      "path": "assets/pegDiagram-VL7TDLO6-DYz_7-vQ.js",
-      "sha256": "a23329c17e83f3617d4ed0626fb3821e7c1886fdbb28cb2ba11af21e4b5a7f30",
+      "path": "assets/pegDiagram-VL7TDLO6-3VLp5xUE.js",
+      "sha256": "231096f3bb2de7674671deedeb78b050f3aa17d7e7c0e2ac1c2076aee332dbb1",
       "bytes": 2009
     },
     {
@@ -1519,8 +1535,8 @@
       "bytes": 122
     },
     {
-      "path": "assets/pieDiagram-7S7Q4E2Y-CCSbLB1b.js",
-      "sha256": "61d8a546b46c817cbe00e931faa1fb27383b470533be69a1f1389c03720123cd",
+      "path": "assets/pieDiagram-7S7Q4E2Y-sGiurAdD.js",
+      "sha256": "92bdcdd6582508e6c7bc973a948388d7cf6d360506273024fe42466e038691e6",
       "bytes": 6209
     },
     {
@@ -1554,13 +1570,13 @@
       "bytes": 130
     },
     {
-      "path": "assets/railroadDiagram-AXF67PYL-CV2ghGC3.js",
-      "sha256": "dbc075e0c13289e14bb42fc6e9f8452985b1c511e877bc7f0b0880039341bcb3",
+      "path": "assets/railroadDiagram-AXF67PYL-DJPTLqpb.js",
+      "sha256": "e344679dd210f0ca71e505a0eef5363b7678cfdc642324aa759459ccb7dc05b2",
       "bytes": 1662
     },
     {
-      "path": "assets/requirementDiagram-LRYGKXZP-D2LNqSMV.js",
-      "sha256": "2141ddef3c4a0acbb9a9a189cbeba44949dc4fcae76e3bdffafc454067dff4b3",
+      "path": "assets/requirementDiagram-LRYGKXZP-gpz4ksRy.js",
+      "sha256": "299750331aee2cb83e7cebafbe6400f1b75f85153df17c96a8d16005772780cb",
       "bytes": 30959
     },
     {
@@ -1574,8 +1590,8 @@
       "bytes": 22792
     },
     {
-      "path": "assets/sequenceDiagram-SI44F4Z6-B1EYtg2e.js",
-      "sha256": "4c27f8ab7d16cce0941bc6295509f49b574334c84a11b4e8cb9ba50429dd82df",
+      "path": "assets/sequenceDiagram-SI44F4Z6-BKzPesFx.js",
+      "sha256": "51fb3de4fa1f3846ee51760ad2cf70cfcae0cc3a66841a8b72431c03c3394dd4",
       "bytes": 115732
     },
     {
@@ -1589,28 +1605,28 @@
       "bytes": 46346
     },
     {
-      "path": "assets/stateDiagram-OKZ733FA-CeDCgK1n.js",
-      "sha256": "b08f6266c23b17e0185537721fea43298c95ded7208d92e96f24409add850a52",
+      "path": "assets/stateDiagram-OKZ733FA-DVQFHI-_.js",
+      "sha256": "b9410208211b9f3a16bc194f3ea13ad6939ccdbdf2cf030202f24be52d7bbcce",
       "bytes": 10595
     },
     {
-      "path": "assets/stateDiagram-v2-UEYNNEHI-C_v0cOhk.js",
-      "sha256": "d71d9865d3ac16ce4166f13967403d698cb855c64e5ec3f7380110844452d7c0",
+      "path": "assets/stateDiagram-v2-UEYNNEHI-CbFtE0NG.js",
+      "sha256": "bbad74309f5dc2be34a7e70450a2115fa479a3cbd8b120ca621c2d9d840cdbd9",
       "bytes": 737
     },
     {
-      "path": "assets/swimlanes-SLNWSIFB-BuQUJ0_O.js",
-      "sha256": "e5e41be15e769c2d69505fb2ac9b8244a9b2457b02ac8cd23b88e28fb62cb018",
+      "path": "assets/swimlanes-SLNWSIFB-Bcibt0Fb.js",
+      "sha256": "5a07d8246ee0cedccb4b326df193c10a08b11ca2696881bc83fa43a3947bc899",
       "bytes": 114065
     },
     {
-      "path": "assets/swimlanesDiagram-ULZ7WXOC-D_jVkApk.js",
-      "sha256": "99c5828a49be5761cdec4d1671c4279b12a0d5a62beeca5f3975b13d53bcadcf",
+      "path": "assets/swimlanesDiagram-ULZ7WXOC-BzclS027.js",
+      "sha256": "d4b6ad57308b15f6eaff4cc6212ebe19d216144de4ad63de2a6af759d25f6a60",
       "bytes": 790
     },
     {
-      "path": "assets/timeline-definition-Z64GVDOM-Cw7emHAv.js",
-      "sha256": "c31aca1a4aad9cf6f608e7a09de17842b7f46c9dc49553fa190eba592d7c746e",
+      "path": "assets/timeline-definition-Z64GVDOM-BjejJPUY.js",
+      "sha256": "a5c2fce97f77b5f0b83a62dc8826ce13ce57bf284b86e60c7d012394baeeb004",
       "bytes": 30362
     },
     {
@@ -1624,8 +1640,8 @@
       "bytes": 126
     },
     {
-      "path": "assets/vennDiagram-T6HMQDX7-DarBr6gD.js",
-      "sha256": "7c494a9994f468a09b43aeb60018ac01d219e07cdb012739304d46a91a38384b",
+      "path": "assets/vennDiagram-T6HMQDX7-Q6pN2BMG.js",
+      "sha256": "b5161a9d3d3eb583eb50b601b701989b6f89eef0ec6e3c899abaddcd0a656dec",
       "bytes": 41151
     },
     {
@@ -1634,13 +1650,13 @@
       "bytes": 126
     },
     {
-      "path": "assets/wardleyDiagram-T6FBY63Y-CGQ7i8DZ.js",
-      "sha256": "8a65b4135299ad937198bd94c97c13c5caabd355adc0afdaf571eb73c5dea0c3",
+      "path": "assets/wardleyDiagram-T6FBY63Y-q1yBAGKT.js",
+      "sha256": "0b0cf88c83949f03e498b7f6de2a187893720c92142a7d49de3d6fb8a922edc3",
       "bytes": 25195
     },
     {
-      "path": "assets/xychartDiagram-ELKLHX3M-CAcs2AT1.js",
-      "sha256": "da7a78dd49301ff8f786d01ab7812f0b6d418d1623d75d698d260c479c72a8af",
+      "path": "assets/xychartDiagram-ELKLHX3M-B82vD0Aq.js",
+      "sha256": "5dae5d8be98fd3ec51d61a382e0bbf84c090fb10a5cf28389b457119d433d117",
       "bytes": 41595
     },
     {
@@ -1655,13 +1671,13 @@
     },
     {
       "path": "index.html",
-      "sha256": "263dca8d83c1cba3252581b5dd8ea98bf70c93d037795eea4baed9cf8b935724",
+      "sha256": "a9919cffb70ca44619830b5ae01bda3c4c887f7c2337573475c537eac04cb30e",
       "bytes": 5160
     },
     {
       "path": "status.json",
-      "sha256": "068624887f1bf828c541f97b8899f5d7115621dacffc7ca9e324bc47c6a4a404",
-      "bytes": 1178
+      "sha256": "102dff309b202ff5dad5ed8e1e5fb0377343fb6a2e26fe60bda050be1db1e625",
+      "bytes": 1189
     },
     {
       "path": "subtitles/manifest.json",
@@ -1669,6 +1685,6 @@
       "bytes": 3
     }
   ],
-  "snapshot_hash": "e2b8cb48b9e07d678f4007fccb8bbc7b69e09dfef4fcafc6df32ddd1f086bd9b",
+  "snapshot_hash": "7dc0251fb917bdd932c3a7f9da0d0304042cf4ba2f106d82da55c9c2bc563ce1",
   "public_commit_evidence": "Public commit/deployment SHA is recorded by the local publisher after this snapshot is pushed."
 }
