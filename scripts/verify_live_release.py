@@ -40,10 +40,23 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
     if not entry_path.startswith(prefix):
         raise ValueError('entry-module-outside-reader')
     entry_path = entry_path[len(prefix):]
+    # The entry alone is insufficient: missing CSS or modulepreload chunks can
+    # leave every lecture broken even when its individual JS asset is served.
+    html_refs = re.findall(r'<(?:script|link)\b[^>]*\b(?:src|href)="([^"]+)"', index, re.I)
+    if not html_refs:
+        raise ValueError('html-asset-references-missing')
+    html_paths = []
+    for ref in html_refs:
+        parsed = urlparse(ref)
+        if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment or not parsed.path.startswith(prefix):
+            raise ValueError('html-asset-outside-reader')
+        html_paths.append(parsed.path[len(prefix):])
+    if entry_path not in html_paths:
+        raise ValueError('entry-module-not-in-html-assets')
     lecture_assets = sorted(path for path in approved if any(path.startswith(f'assets/{p:03d}-') for p in positions))
     if any(not any(path.startswith(f'assets/{p:03d}-') for path in lecture_assets) for p in positions):
         raise ValueError('approved-materia-asset-missing')
-    paths = list(dict.fromkeys(['status.json', 'index.html', entry_path, *lecture_assets]))
+    paths = list(dict.fromkeys(['status.json', 'index.html', *html_paths, *lecture_assets]))
     if any(path not in approved for path in paths):
         raise ValueError('unapproved-reader-asset')
 
