@@ -23,6 +23,8 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         raise ValueError('invalid-approved-materia-positions')
     if (expected_status.get('materia_publishable') or {}).get('positions') != positions:
         raise ValueError('committed-status-position-mismatch')
+    if (expected_status.get('materia_publishable') or {}).get('count') != len(positions):
+        raise ValueError('committed-status-count-mismatch')
     if manifest.get('source_commit') != expected_status.get('source_commit'):
         raise ValueError('committed-source-identity-mismatch')
     approved = {item['path']: item['sha256'] for item in manifest.get('approved_files', [])}
