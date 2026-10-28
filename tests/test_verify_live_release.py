@@ -22,8 +22,12 @@ BASE = 'https://reader.example/homeopathy/'
 class FakeResponse:
     status = 200
 
-    def __init__(self, content):
+    def __init__(self, content, url):
         self.content = content
+        self.url = url
+
+    def geturl(self):
+        return self.url
 
     def read(self):
         return self.content
@@ -74,7 +78,7 @@ class VerifyLiveReleaseTests(unittest.TestCase):
             path = unquote(urlparse(request.full_url).path.removeprefix('/homeopathy/'))
             if path not in served:
                 raise OSError('asset missing')
-            return FakeResponse(served[path])
+            return FakeResponse(served[path], request.full_url)
 
         with patch.object(verifier, 'urlopen', side_effect=get):
             return verifier.check(self.release, BASE, timeout=1)
@@ -86,6 +90,15 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         served = dict(self.files, **{'assets/site.css': b'corrupt'})
         with self.assertRaisesRegex(ValueError, 'live-asset-hash-mismatch:assets/site.css'):
             self.check(served)
+
+    def test_off_origin_redirect_fails_even_with_matching_bytes(self):
+        # urllib follows redirects, so an identical off-site copy must not
+        # satisfy the directly-served Reader release acceptance check.
+        with patch.object(verifier, 'urlopen', return_value=FakeResponse(
+            self.files['status.json'], 'https://elsewhere.example/homeopathy/status.json'
+        )):
+            with self.assertRaisesRegex(ValueError, 'live-asset-redirected:status.json'):
+                verifier.check(self.release, BASE, timeout=1)
 
     def test_missing_live_preload_fails_closed(self):
         served = dict(self.files)
