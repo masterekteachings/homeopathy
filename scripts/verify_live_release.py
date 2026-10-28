@@ -53,9 +53,15 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         html_paths.append(parsed.path[len(prefix):])
     if entry_path not in html_paths:
         raise ValueError('entry-module-not-in-html-assets')
-    lecture_assets = sorted(path for path in approved if any(path.startswith(f'assets/{p:03d}-') for p in positions))
-    if any(not any(path.startswith(f'assets/{p:03d}-') for path in lecture_assets) for p in positions):
-        raise ValueError('approved-materia-asset-missing')
+    # Current approved Reader build emits three JS chunks per Materia lecture.
+    # A single matching chunk must never make an incomplete lecture look deployed.
+    lecture_assets = []
+    for position in positions:
+        matched = sorted(path for path in approved
+                         if path.startswith(f'assets/{position:03d}-') and path.endswith('.js'))
+        if len(matched) != 3:
+            raise ValueError(f'approved-materia-asset-count:{position:03d}={len(matched)}')
+        lecture_assets.extend(matched)
     paths = list(dict.fromkeys(['status.json', 'index.html', *html_paths, *lecture_assets]))
     if any(path not in approved for path in paths):
         raise ValueError('unapproved-reader-asset')
