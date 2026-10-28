@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Read-only verification of the committed Homeopathy release on GitHub Pages.
 
-This checks live status/index bytes and every approved Materia JS asset. It cannot
-prove that a browser successfully renders each hash route or that audio works.
+This checks live status/index, HTML bootstrap assets (CSS, preload, icon),
+and approved Materia JS bytes. It cannot prove browser route or audio usability.
 """
 import argparse
 import hashlib
