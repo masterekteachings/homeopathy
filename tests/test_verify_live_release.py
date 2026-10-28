@@ -41,7 +41,7 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.release = Path(self.temp.name)
         self.files = {
-            'status.json': json.dumps({'source_commit': 'trusted', 'materia_publishable': {'positions': [39]}}).encode(),
+            'status.json': json.dumps({'source_commit': 'trusted', 'materia_publishable': {'count': 1, 'positions': [39]}}).encode(),
             'index.html': (b'<html><link rel="stylesheet" href="/homeopathy/assets/site.css">'
                            b'<link rel="modulepreload" href="/homeopathy/assets/preload.js">'
                            b'<script type="module" src="/homeopathy/assets/main.js"></script></html>'),
@@ -97,6 +97,16 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         self.write_manifest(positions=[40])
         with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
             with self.assertRaisesRegex(ValueError, 'committed-status-position-mismatch'):
+                verifier.check(self.release, BASE, timeout=1)
+
+    def test_committed_count_drift_fails_before_network(self):
+        status = json.loads(self.files['status.json'])
+        status['materia_publishable']['count'] = 2
+        self.files['status.json'] = json.dumps(status).encode()
+        (self.release / 'status.json').write_bytes(self.files['status.json'])
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
+            with self.assertRaisesRegex(ValueError, 'committed-status-count-mismatch'):
                 verifier.check(self.release, BASE, timeout=1)
 
     def test_off_origin_html_asset_fails_before_network(self):
