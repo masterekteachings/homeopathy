@@ -112,7 +112,33 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         self.files = {path: data for path, data in self.files.items() if not path.startswith('assets/039-')}
         self.write_manifest()
         with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
-            with self.assertRaisesRegex(ValueError, 'approved-materia-asset-missing'):
+            with self.assertRaisesRegex(ValueError, 'approved-materia-asset-count:039=0'):
+                verifier.check(self.release, BASE, timeout=1)
+
+
+    def test_partial_approved_materia_assets_fails_before_network(self):
+        # Previous verifier accepted one chunk as sufficient for an entire lecture.
+        self.files = {path: data for path, data in self.files.items()
+                      if path != 'assets/039-synopsis.js'}
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
+            with self.assertRaisesRegex(ValueError, 'approved-materia-asset-count:039=2'):
+                verifier.check(self.release, BASE, timeout=1)
+
+    def test_extra_approved_materia_chunk_fails_before_network(self):
+        self.files['assets/039-unexpected.js'] = b'unexpected chunk'
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
+            with self.assertRaisesRegex(ValueError, 'approved-materia-asset-count:039=4'):
+                verifier.check(self.release, BASE, timeout=1)
+
+    def test_non_js_placeholder_does_not_count_as_materia_chunk(self):
+        self.files = {path: data for path, data in self.files.items()
+                      if not path.startswith('assets/039-')}
+        self.files['assets/039-placeholder.txt'] = b'not a lecture module'
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
+            with self.assertRaisesRegex(ValueError, 'approved-materia-asset-count:039=0'):
                 verifier.check(self.release, BASE, timeout=1)
 
 
