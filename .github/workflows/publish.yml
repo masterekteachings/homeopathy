@@ -88,6 +88,14 @@ jobs:
           actual_paths.discard('.publication-manifest.json')
           if actual_paths != expected_paths:
               raise SystemExit('release files differ from approved manifest')
+          # Reject incomplete lecture bundles before any public upload; the
+          # post-deploy verifier must not be the first to discover this drift.
+          for position in materia_positions:
+              chunks = [path for path in expected_paths
+                        if path.startswith(f'assets/{position:03d}-') and path.endswith('.js')]
+              if len(chunks) != 3:
+                  raise SystemExit(f'incomplete approved Materia lecture {position:03d}: {len(chunks)} JS chunks')
+
           print(f'Approved release integrity: {len(expected_paths)} files SHA-256 verified')
 
           print(f'Approved learner release: Philosophy 38/38, Materia {len(materia_positions)}')
