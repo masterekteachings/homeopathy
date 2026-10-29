@@ -56,6 +56,13 @@ jobs:
           # Reject metadata drift before any public upload; post-deploy checks
           # must not be the first point at which inconsistent counts are found.
           status = json.loads(Path('release/status.json').read_text(encoding='utf-8'))
+          # Complete Philosophy files alone are not enough if status.json hides
+          # approved lessons from the Reader's published catalogue.
+          philosophy_status = status.get('philosophy_baseline') or {}
+          if (philosophy_status.get('positions') != list(range(1, 39))
+                  or philosophy_status.get('publishable') != 38
+                  or philosophy_status.get('total') != 38):
+              raise SystemExit('release Philosophy status disagrees with approved 38/38 baseline')
           materia_status = status.get('materia_publishable') or {}
           if (materia_status.get('positions') != materia_positions
                   or materia_status.get('count') != len(materia_positions)
