@@ -165,5 +165,33 @@ class VerifyLiveReleaseTests(unittest.TestCase):
                 verifier.check(self.release, BASE, timeout=1)
 
 
+    def test_unreferenced_approved_dynamic_asset_is_verified(self):
+        # Runtime imports need not appear in index.html.
+        self.files['assets/038-philosophy.js'] = b'export const philosophy = true;'
+        self.write_manifest()
+        self.assertEqual(self.check(), (1, 9))
+
+    def test_missing_unreferenced_dynamic_asset_fails_closed(self):
+        self.files['assets/038-philosophy.js'] = b'export const philosophy = true;'
+        self.write_manifest()
+        served = {path: data for path, data in self.files.items()
+                  if path != 'assets/038-philosophy.js'}
+        with self.assertRaises(OSError):
+            self.check(served)
+
+    def test_corrupt_unreferenced_dynamic_asset_fails_closed(self):
+        self.files['assets/038-philosophy.js'] = b'export const philosophy = true;'
+        self.write_manifest()
+        served = dict(self.files, **{'assets/038-philosophy.js': b'corrupt'})
+        with self.assertRaisesRegex(ValueError, 'live-asset-hash-mismatch:assets/038-philosophy.js'):
+            self.check(served)
+
+    def test_nojekyll_control_marker_is_not_a_web_asset(self):
+        self.files['.nojekyll'] = b''
+        self.write_manifest()
+        served = {path: data for path, data in self.files.items() if path != '.nojekyll'}
+        self.assertEqual(self.check(served), (1, 8))
+
+
 if __name__ == '__main__':
     unittest.main()
