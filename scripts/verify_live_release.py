@@ -64,7 +64,11 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         if len(matched) != 3:
             raise ValueError(f'approved-materia-asset-count:{position:03d}={len(matched)}')
         lecture_assets.extend(matched)
-    paths = list(dict.fromkeys(['status.json', 'index.html', *html_paths, *lecture_assets]))
+    # Include every approved runtime asset, even dynamically imported Philosophy
+    # and lecture chunks absent from index.html. .nojekyll is a Pages control
+    # marker, not a browser asset.
+    paths = list(dict.fromkeys(['status.json', 'index.html', *html_paths, *lecture_assets,
+                                *(path for path in approved if path != '.nojekyll')]))
     if any(path not in approved for path in paths):
         raise ValueError('unapproved-reader-asset')
 
