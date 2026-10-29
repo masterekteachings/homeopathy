@@ -53,6 +53,15 @@ jobs:
           if any(not isinstance(p, int) or p < 39 or p > 117 for p in materia_positions):
               raise SystemExit('Materia position outside expected lecture range')
 
+          # Reject metadata drift before any public upload; post-deploy checks
+          # must not be the first point at which inconsistent counts are found.
+          status = json.loads(Path('release/status.json').read_text(encoding='utf-8'))
+          materia_status = status.get('materia_publishable') or {}
+          if (materia_status.get('positions') != materia_positions
+                  or materia_status.get('count') != len(materia_positions)
+                  or status.get('source_commit') != manifest.get('source_commit')):
+              raise SystemExit('release status disagrees with approved manifest')
+
           # Verify the complete approved release BEFORE staging or publishing.
           # The post-deploy verifier separately checks the directly served Reader.
           approved = manifest.get('approved_files')
