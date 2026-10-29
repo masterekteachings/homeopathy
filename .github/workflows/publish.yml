@@ -48,6 +48,12 @@ jobs:
               raise SystemExit('release does not contain the verified 38/38 Philosophy set')
 
           materia_positions = quality.get('materia_positions') or []
+          # The existing 20 source/QC-accepted lectures must not disappear in
+          # a later publication snapshot, even if a new manifest is self-consistent.
+          accepted_baseline = {39, 40, 41, 42, 43, 45, 46, 49, 60, 62,
+                               65, 66, 67, 79, 82, 86, 88, 102, 105, 107}
+          if not accepted_baseline.issubset(set(materia_positions)):
+              raise SystemExit('release drops an already-accepted Materia lecture')
           if len(materia_positions) != len(set(materia_positions)):
               raise SystemExit('Materia positions contain duplicates')
           if any(not isinstance(p, int) or p < 39 or p > 117 for p in materia_positions):
