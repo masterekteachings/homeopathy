@@ -28,6 +28,7 @@ jobs:
           test -f release/.publication-manifest.json
           test -f release/index.html
           python3 - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
@@ -51,6 +52,34 @@ jobs:
               raise SystemExit('Materia positions contain duplicates')
           if any(not isinstance(p, int) or p < 39 or p > 117 for p in materia_positions):
               raise SystemExit('Materia position outside expected lecture range')
+
+          # Verify the complete approved release BEFORE staging or publishing.
+          # The post-deploy verifier separately checks the directly served Reader.
+          approved = manifest.get('approved_files')
+          if not isinstance(approved, list) or not approved:
+              raise SystemExit('approved release file list missing')
+          root = Path('release')
+          expected_paths = set()
+          for item in approved:
+              path = item.get('path') if isinstance(item, dict) else None
+              if (not isinstance(path, str) or not path or path.startswith('/')
+                      or '\\' in path or '.' in Path(path).parts or '..' in Path(path).parts
+                      or path in expected_paths or path == '.publication-manifest.json'):
+                  raise SystemExit('unsafe or duplicate approved release path')
+              expected_paths.add(path)
+              candidate = root / path
+              if candidate.is_symlink() or not candidate.is_file():
+                  raise SystemExit('missing or symlinked approved release file: ' + path)
+              if candidate.stat().st_size != item.get('bytes'):
+                  raise SystemExit('approved release byte count mismatch: ' + path)
+              if hashlib.sha256(candidate.read_bytes()).hexdigest() != item.get('sha256'):
+                  raise SystemExit('approved release hash mismatch: ' + path)
+          actual_paths = {p.relative_to(root).as_posix() for p in root.rglob('*')
+                          if p.is_file() or p.is_symlink()}
+          actual_paths.discard('.publication-manifest.json')
+          if actual_paths != expected_paths:
+              raise SystemExit('release files differ from approved manifest')
+          print(f'Approved release integrity: {len(expected_paths)} files SHA-256 verified')
 
           print(f'Approved learner release: Philosophy 38/38, Materia {len(materia_positions)}')
           PY
