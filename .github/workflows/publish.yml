@@ -121,6 +121,10 @@ jobs:
           print(f'Approved learner release: Philosophy 38/38, Materia {len(materia_positions)}')
           PY
 
+      - name: Run offline publication verifier regressions
+        shell: bash
+        run: python3 -m unittest discover -s tests -p 'test_verify_live_release.py' -v
+
       - name: Stage committed release snapshot
         shell: bash
         run: |
