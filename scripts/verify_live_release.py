@@ -86,6 +86,16 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
                 raise ValueError('live-asset-redirected:' + path)
             if response.status != 200:
                 raise ValueError('live-asset-http-not-200')
+            # Module scripts and stylesheets require correct MIME types in browsers.
+            # Matching bytes served as HTML/text/plain can still break every route.
+            mime = response.headers.get('Content-Type', '').split(';', 1)[0].strip().lower()
+            if path.endswith('.js') and mime not in {
+                'text/javascript', 'application/javascript', 'application/x-javascript',
+                'text/ecmascript', 'application/ecmascript'
+            }:
+                raise ValueError('live-js-mime-mismatch:' + path)
+            if path.endswith('.css') and mime != 'text/css':
+                raise ValueError('live-css-mime-mismatch:' + path)
             actual = hashlib.sha256(response.read()).hexdigest()
         if actual != approved[path]:
             raise ValueError('live-asset-hash-mismatch:' + path)
