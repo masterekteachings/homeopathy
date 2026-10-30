@@ -142,7 +142,8 @@ jobs:
       - name: Verify directly served approved Materia assets
         shell: bash
         run: |
-          python3 scripts/verify_live_release.py \
+          # 317 served assets x retries can otherwise exceed the job's useful window.
+          timeout --signal=TERM --kill-after=15s 15m python3 scripts/verify_live_release.py \
             --release release \
             --base https://masterekteachings.github.io/homeopathy/ \
             --attempts 12 --delay 15 --timeout 15
