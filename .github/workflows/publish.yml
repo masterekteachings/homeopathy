@@ -106,7 +106,7 @@ jobs:
           # affected HTML before staging; only the trusted builder may repair
           # the release and regenerate its manifest.
           reader_html = (root / 'index.html').read_text(encoding='utf-8')
-          if ('new MutationObserver(installSourceLink)' in reader_html
+          if ('installSourceLink' in reader_html and 'MutationObserver' in reader_html
                   and 'if (anchor && anchor.textContent !== (labels[lang] || labels.en))' not in reader_html):
               raise SystemExit('unsafe Reader source-link observer; rebuild and reapprove release')
           # Preserve the accepted 38/38 Philosophy baseline as complete bundles.
