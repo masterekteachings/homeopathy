@@ -22,9 +22,14 @@ BASE = 'https://reader.example/homeopathy/'
 class FakeResponse:
     status = 200
 
-    def __init__(self, content, url):
+    def __init__(self, content, url, content_type=None):
         self.content = content
         self.url = url
+        suffix = urlparse(url).path
+        default_type = ('text/css' if suffix.endswith('.css') else
+                        'text/javascript' if suffix.endswith('.js') else
+                        'application/octet-stream')
+        self.headers = {'Content-Type': content_type or default_type}
 
     def geturl(self):
         return self.url
@@ -71,14 +76,15 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         }
         (self.release / '.publication-manifest.json').write_text(json.dumps(self.manifest))
 
-    def check(self, served=None):
+    def check(self, served=None, mime_overrides=None):
         served = self.files if served is None else served
 
         def get(request, timeout):
             path = unquote(urlparse(request.full_url).path.removeprefix('/homeopathy/'))
             if path not in served:
                 raise OSError('asset missing')
-            return FakeResponse(served[path], request.full_url)
+            return FakeResponse(served[path], request.full_url,
+                                (mime_overrides or {}).get(path))
 
         with patch.object(verifier, 'urlopen', side_effect=get):
             return verifier.check(self.release, BASE, timeout=1)
@@ -90,6 +96,14 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         served = dict(self.files, **{'assets/site.css': b'corrupt'})
         with self.assertRaisesRegex(ValueError, 'live-asset-hash-mismatch:assets/site.css'):
             self.check(served)
+
+    def test_live_javascript_wrong_mime_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, 'live-js-mime-mismatch:assets/main.js'):
+            self.check(mime_overrides={'assets/main.js': 'text/html'})
+
+    def test_live_stylesheet_wrong_mime_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, 'live-css-mime-mismatch:assets/site.css'):
+            self.check(mime_overrides={'assets/site.css': 'text/plain'})
 
     def test_off_origin_redirect_fails_even_with_matching_bytes(self):
         # urllib follows redirects, so an identical off-site copy must not
