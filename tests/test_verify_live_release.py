@@ -26,7 +26,8 @@ class FakeResponse:
         self.content = content
         self.url = url
         suffix = urlparse(url).path
-        default_type = ('text/css' if suffix.endswith('.css') else
+        default_type = ('text/html' if suffix.endswith('.html') else
+                        'text/css' if suffix.endswith('.css') else
                         'text/javascript' if suffix.endswith('.js') else
                         'application/octet-stream')
         self.headers = {'Content-Type': content_type or default_type}
@@ -104,6 +105,11 @@ class VerifyLiveReleaseTests(unittest.TestCase):
     def test_live_stylesheet_wrong_mime_fails_closed(self):
         with self.assertRaisesRegex(ValueError, 'live-css-mime-mismatch:assets/site.css'):
             self.check(mime_overrides={'assets/site.css': 'text/plain'})
+
+    def test_live_reader_html_wrong_mime_fails_closed(self):
+        # Matching bytes served as plain text cannot render the Reader in a browser.
+        with self.assertRaisesRegex(ValueError, 'live-html-mime-mismatch:index.html'):
+            self.check(mime_overrides={'index.html': 'text/plain'})
 
     def test_off_origin_redirect_fails_even_with_matching_bytes(self):
         # urllib follows redirects, so an identical off-site copy must not
