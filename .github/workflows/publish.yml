@@ -28,7 +28,9 @@ jobs:
           test -f release/.publication-manifest.json
           test -f release/index.html
           python3 - <<'PY'
+          import hashlib
           import json
+          import re
           from pathlib import Path
 
           manifest = json.loads(Path('release/.publication-manifest.json').read_text(encoding='utf-8'))
@@ -47,13 +49,99 @@ jobs:
               raise SystemExit('release does not contain the verified 38/38 Philosophy set')
 
           materia_positions = quality.get('materia_positions') or []
+          # The existing 20 source/QC-accepted lectures must not disappear in
+          # a later publication snapshot, even if a new manifest is self-consistent.
+          accepted_baseline = {39, 40, 41, 42, 43, 45, 46, 49, 60, 62,
+                               65, 66, 67, 79, 82, 86, 88, 102, 105, 107}
+          if not accepted_baseline.issubset(set(materia_positions)):
+              raise SystemExit('release drops an already-accepted Materia lecture')
           if len(materia_positions) != len(set(materia_positions)):
               raise SystemExit('Materia positions contain duplicates')
           if any(not isinstance(p, int) or p < 39 or p > 117 for p in materia_positions):
               raise SystemExit('Materia position outside expected lecture range')
 
+          # Reject metadata drift before any public upload; post-deploy checks
+          # must not be the first point at which inconsistent counts are found.
+          status = json.loads(Path('release/status.json').read_text(encoding='utf-8'))
+          # Complete Philosophy files alone are not enough if status.json hides
+          # approved lessons from the Reader's published catalogue.
+          philosophy_status = status.get('philosophy_baseline') or {}
+          if (philosophy_status.get('positions') != list(range(1, 39))
+                  or philosophy_status.get('publishable') != 38
+                  or philosophy_status.get('total') != 38):
+              raise SystemExit('release Philosophy status disagrees with approved 38/38 baseline')
+          materia_status = status.get('materia_publishable') or {}
+          if (materia_status.get('positions') != materia_positions
+                  or materia_status.get('count') != len(materia_positions)
+                  or status.get('source_commit') != manifest.get('source_commit')):
+              raise SystemExit('release status disagrees with approved manifest')
+
+          # Verify the complete approved release BEFORE staging or publishing.
+          # The post-deploy verifier separately checks the directly served Reader.
+          approved = manifest.get('approved_files')
+          if not isinstance(approved, list) or not approved:
+              raise SystemExit('approved release file list missing')
+          root = Path('release')
+          expected_paths = set()
+          for item in approved:
+              path = item.get('path') if isinstance(item, dict) else None
+              if (not isinstance(path, str) or not path or path.startswith('/')
+                      or '\\' in path or '.' in Path(path).parts or '..' in Path(path).parts
+                      or path in expected_paths or path == '.publication-manifest.json'):
+                  raise SystemExit('unsafe or duplicate approved release path')
+              expected_paths.add(path)
+              candidate = root / path
+              if candidate.is_symlink() or not candidate.is_file():
+                  raise SystemExit('missing or symlinked approved release file: ' + path)
+              if candidate.stat().st_size != item.get('bytes'):
+                  raise SystemExit('approved release byte count mismatch: ' + path)
+              if hashlib.sha256(candidate.read_bytes()).hexdigest() != item.get('sha256'):
+                  raise SystemExit('approved release hash mismatch: ' + path)
+          actual_paths = {p.relative_to(root).as_posix() for p in root.rglob('*')
+                          if p.is_file() or p.is_symlink()}
+          actual_paths.discard('.publication-manifest.json')
+          if actual_paths != expected_paths:
+              raise SystemExit('release files differ from approved manifest')
+          # A known Reader source-link MutationObserver loop can freeze the
+          # browser even when every approved asset hash is correct. Block the
+          # affected HTML before staging; only the trusted builder may repair
+          # the release and regenerate its manifest.
+          reader_html = (root / 'index.html').read_text(encoding='utf-8')
+          if 'installSourceLink' in reader_html and 'MutationObserver' in reader_html:
+              # Require the actual guarded assignment, not a harmless-looking
+              # condition in a comment alongside an unguarded assignment.
+              guarded = re.compile(
+                  r'if\s*\(\s*anchor\s*&&\s*anchor\.textContent\s*!==\s*'
+                  r'\(labels\[lang\]\s*\|\|\s*labels\.en\)\s*\)\s*'
+                  r'\{\s*anchor\.textContent\s*=\s*labels\[lang\]\s*\|\|\s*labels\.en\s*;\s*\}'
+              )
+              guarded_matches = list(guarded.finditer(reader_html))
+              remainder = guarded.sub('', reader_html)
+              if len(guarded_matches) != 1 or re.search(r'anchor\.textContent\s*=', remainder):
+                  raise SystemExit('unsafe Reader source-link observer; rebuild and reapprove release')
+          # Preserve the accepted 38/38 Philosophy baseline as complete bundles.
+          # The approved Reader build contains four JS chunks per Philosophy lecture.
+          for position in range(1, 39):
+              chunks = [path for path in expected_paths
+                        if path.startswith(f'assets/{position:03d}-') and path.endswith('.js')]
+              if len(chunks) != 4:
+                  raise SystemExit(f'incomplete approved Philosophy lecture {position:03d}: {len(chunks)} JS chunks')
+          # Reject incomplete lecture bundles before any public upload; the
+          # post-deploy verifier must not be the first to discover this drift.
+          for position in materia_positions:
+              chunks = [path for path in expected_paths
+                        if path.startswith(f'assets/{position:03d}-') and path.endswith('.js')]
+              if len(chunks) != 3:
+                  raise SystemExit(f'incomplete approved Materia lecture {position:03d}: {len(chunks)} JS chunks')
+
+          print(f'Approved release integrity: {len(expected_paths)} files SHA-256 verified')
+
           print(f'Approved learner release: Philosophy 38/38, Materia {len(materia_positions)}')
           PY
+
+      - name: Run offline publication verifier regressions
+        shell: bash
+        run: python3 -m unittest discover -s tests -p 'test_verify_live_release.py' -v
 
       - name: Stage committed release snapshot
         shell: bash
@@ -72,3 +160,12 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify directly served approved Materia assets
+        shell: bash
+        run: |
+          # 317 served assets x retries can otherwise exceed the job's useful window.
+          timeout --signal=TERM --kill-after=15s 15m python3 scripts/verify_live_release.py \
+            --release release \
+            --base https://masterekteachings.github.io/homeopathy/ \
+            --attempts 12 --delay 15 --timeout 15
