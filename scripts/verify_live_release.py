@@ -96,6 +96,8 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
                 raise ValueError('live-js-mime-mismatch:' + path)
             if path.endswith('.css') and mime != 'text/css':
                 raise ValueError('live-css-mime-mismatch:' + path)
+            if path.endswith('.html') and mime != 'text/html':
+                raise ValueError('live-html-mime-mismatch:' + path)
             actual = hashlib.sha256(response.read()).hexdigest()
         if actual != approved[path]:
             raise ValueError('live-asset-hash-mismatch:' + path)
