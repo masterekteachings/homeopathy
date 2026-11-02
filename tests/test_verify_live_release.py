@@ -171,6 +171,15 @@ class VerifyLiveReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'live-asset-redirected:status.json'):
                 verifier.check(self.release, BASE, timeout=1)
 
+    def test_same_path_query_redirect_fails_even_with_matching_bytes(self):
+        # A bare browser URL may redirect to a fresh query-specific CDN copy.
+        # Same origin and path do not establish parity with the requested URL.
+        with patch.object(verifier, 'urlopen', return_value=FakeResponse(
+            self.files['status.json'], BASE + 'status.json?fresh=1'
+        )):
+            with self.assertRaisesRegex(ValueError, 'live-asset-redirected:status.json'):
+                verifier.check(self.release, BASE, timeout=1)
+
     def test_missing_live_preload_fails_closed(self):
         served = dict(self.files)
         del served['assets/preload.js']
