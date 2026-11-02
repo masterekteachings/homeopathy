@@ -9,7 +9,6 @@ import hashlib
 import json
 import re
 import sys
-import time
 from pathlib import Path
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -73,7 +72,8 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         raise ValueError('unapproved-reader-asset')
 
     for path in paths:
-        url = base.rstrip('/') + '/' + quote(path, safe='/') + '?verify=' + str(int(time.time()))
+        # Request exactly the URL the browser uses; query-specific cache keys can hide stale assets.
+        url = base.rstrip('/') + '/' + quote(path, safe='/')
         request = Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'master-ek-live-release-verifier/1'})
         with urlopen(request, timeout=timeout) as response:
             # urllib follows redirects automatically. A byte-identical copy on
