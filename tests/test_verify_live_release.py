@@ -93,6 +93,33 @@ class VerifyLiveReleaseTests(unittest.TestCase):
     def test_matching_release_verifies_all_eight_assets(self):
         self.assertEqual(self.check(), (1, 8))
 
+    def test_requests_exact_browser_asset_urls(self):
+        # A cache-busting query uses a different CDN cache key from the Reader.
+        requested = []
+        def get(request, timeout):
+            requested.append(request.full_url)
+            parsed = urlparse(request.full_url)
+            path = unquote(parsed.path.removeprefix('/homeopathy/'))
+            return FakeResponse(self.files[path], request.full_url)
+        with patch.object(verifier, 'urlopen', side_effect=get):
+            self.assertEqual(verifier.check(self.release, BASE, timeout=1), (1, 8))
+        self.assertEqual(set(requested),
+                         {BASE + path for path in self.files})
+        self.assertTrue(all(not urlparse(url).query for url in requested))
+
+    def test_query_specific_good_copy_cannot_mask_stale_browser_asset(self):
+        # Old verifier passed when ?verify= served approved bytes but the
+        # exact browser URL served stale content; this must fail closed.
+        def get(request, timeout):
+            parsed = urlparse(request.full_url)
+            path = unquote(parsed.path.removeprefix('/homeopathy/'))
+            content = (self.files[path] if parsed.query
+                       else b'stale-browser-cache-copy')
+            return FakeResponse(content, request.full_url)
+        with patch.object(verifier, 'urlopen', side_effect=get):
+            with self.assertRaisesRegex(ValueError, 'live-asset-hash-mismatch:status.json'):
+                verifier.check(self.release, BASE, timeout=1)
+
     def test_corrupted_live_stylesheet_fails_closed(self):
         served = dict(self.files, **{'assets/site.css': b'corrupt'})
         with self.assertRaisesRegex(ValueError, 'live-asset-hash-mismatch:assets/site.css'):
