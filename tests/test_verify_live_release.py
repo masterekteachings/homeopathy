@@ -93,6 +93,16 @@ class VerifyLiveReleaseTests(unittest.TestCase):
     def test_matching_release_verifies_all_eight_assets(self):
         self.assertEqual(self.check(), (1, 8))
 
+    def test_html_base_cannot_redirect_browser_assets_off_origin(self):
+        # All bytes and bare URLs match, yet the browser resolves root-relative
+        # assets against the malicious base origin instead of the Reader host.
+        self.files['index.html'] = self.files['index.html'].replace(
+            b'<html>', b'<html><base href="https://off-origin.example/">', 1)
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('must fail before network')):
+            with self.assertRaisesRegex(ValueError, 'html-base-element-forbidden'):
+                verifier.check(self.release, BASE, timeout=1)
+
     def test_requests_exact_browser_asset_urls(self):
         # A cache-busting query uses a different CDN cache key from the Reader.
         requested = []
