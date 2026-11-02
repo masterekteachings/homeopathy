@@ -89,11 +89,9 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         with urlopen(request, timeout=timeout) as response:
             # urllib follows redirects automatically. A byte-identical copy on
             # another host/path is not proof that this Reader serves the asset.
-            final_url = urlparse(response.geturl())
-            requested_url = urlparse(url)
-            if (final_url.scheme, final_url.netloc, final_url.path) != (
-                requested_url.scheme, requested_url.netloc, requested_url.path
-            ):
+            # A redirect to the same path with a cache-busting query is still
+            # not the exact URL the learner requested; reject all redirects.
+            if response.geturl() != url:
                 raise ValueError('live-asset-redirected:' + path)
             if response.status != 200:
                 raise ValueError('live-asset-http-not-200')
