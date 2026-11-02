@@ -35,13 +35,26 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         if path.startswith('/') or '..' in Path(path).parts or '\\' in path:
             raise ValueError('unsafe-approved-path')
     index = (release / 'index.html').read_text(encoding='utf-8')
-    # <base> changes the origin of even root-relative browser asset URLs.
-    # Hashing those URLs on this host would otherwise falsely pass.
-    class RejectBase(HTMLParser):
+    # Parse browser asset references using HTML rules, not a double-quote
+    # regex: single-quoted/unquoted tags could otherwise load unapproved code.
+    class BrowserAssets(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.refs = []
+
         def handle_starttag(self, tag, attrs):
             if tag == 'base':
                 raise ValueError('html-base-element-forbidden')
-    RejectBase().feed(index)
+            if tag in ('script', 'link'):
+                for name, value in attrs:
+                    if name in ('src', 'href'):
+                        if not value:
+                            raise ValueError('html-asset-empty-reference')
+                        self.refs.append(value)
+
+    browser_assets = BrowserAssets()
+    browser_assets.feed(index)
+    browser_assets.close()
     entry = re.search(r'<script[^>]+type="module"[^>]+src="([^"]+)"', index)
     if not entry:
         raise ValueError('entry-module-missing')
@@ -52,7 +65,7 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
     entry_path = entry_path[len(prefix):]
     # The entry alone is insufficient: missing CSS or modulepreload chunks can
     # leave every lecture broken even when its individual JS asset is served.
-    html_refs = re.findall(r'<(?:script|link)\b[^>]*\b(?:src|href)="([^"]+)"', index, re.I)
+    html_refs = browser_assets.refs
     if not html_refs:
         raise ValueError('html-asset-references-missing')
     html_paths = []
