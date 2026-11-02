@@ -98,6 +98,7 @@ class VerifyLiveReleaseTests(unittest.TestCase):
         # assets against the malicious base origin instead of the Reader host.
         self.files['index.html'] = self.files['index.html'].replace(
             b'<html>', b'<html><base href="https://off-origin.example/">', 1)
+        (self.release / 'index.html').write_bytes(self.files['index.html'])
         self.write_manifest()
         with patch.object(verifier, 'urlopen', side_effect=AssertionError('must fail before network')):
             with self.assertRaisesRegex(ValueError, 'html-base-element-forbidden'):
