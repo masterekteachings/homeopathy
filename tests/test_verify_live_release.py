@@ -107,6 +107,19 @@ class VerifyLiveReleaseTests(unittest.TestCase):
                          {BASE + path for path in self.files})
         self.assertTrue(all(not urlparse(url).query for url in requested))
 
+    def test_forced_revalidation_cannot_mask_stale_browser_cache(self):
+        # A CDN can serve the approved bytes only when Cache-Control forces
+        # revalidation, while normal browser requests still receive stale data.
+        # The verifier must test the ordinary learner-visible response.
+        def get(request, timeout):
+            path = unquote(urlparse(request.full_url).path.removeprefix('/homeopathy/'))
+            content = (self.files[path] if request.get_header('Cache-control')
+                       else b'stale-browser-cache-copy')
+            return FakeResponse(content, request.full_url)
+        with patch.object(verifier, 'urlopen', side_effect=get):
+            with self.assertRaisesRegex(ValueError, 'live-asset-hash-mismatch:status.json'):
+                verifier.check(self.release, BASE, timeout=1)
+
     def test_query_specific_good_copy_cannot_mask_stale_browser_asset(self):
         # Old verifier passed when ?verify= served approved bytes but the
         # exact browser URL served stale content; this must fail closed.
