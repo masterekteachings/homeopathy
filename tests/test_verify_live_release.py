@@ -211,6 +211,26 @@ class VerifyLiveReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'html-asset-outside-reader'):
                 verifier.check(self.release, BASE, timeout=1)
 
+    def test_single_quoted_unapproved_script_fails_before_network(self):
+        # A double-quote-only regex missed this browser-executable script.
+        self.files['index.html'] = self.files['index.html'].replace(
+            b'</html>', b"<script src='https://untrusted.example/injected.js'></script></html>")
+        (self.release / 'index.html').write_bytes(self.files['index.html'])
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
+            with self.assertRaisesRegex(ValueError, 'html-asset-outside-reader'):
+                verifier.check(self.release, BASE, timeout=1)
+
+    def test_unquoted_unapproved_script_fails_before_network(self):
+        # HTML accepts unquoted src attributes, including protocol-relative URLs.
+        self.files['index.html'] = self.files['index.html'].replace(
+            b'</html>', b'<script src=//untrusted.example/injected.js></script></html>')
+        (self.release / 'index.html').write_bytes(self.files['index.html'])
+        self.write_manifest()
+        with patch.object(verifier, 'urlopen', side_effect=AssertionError('network must not be used')):
+            with self.assertRaisesRegex(ValueError, 'html-asset-outside-reader'):
+                verifier.check(self.release, BASE, timeout=1)
+
     def test_missing_approved_materia_assets_fails_before_network(self):
         self.files = {path: data for path, data in self.files.items() if not path.startswith('assets/039-')}
         self.write_manifest()
