@@ -10,6 +10,7 @@ import json
 import re
 import sys
 import time
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -34,6 +35,13 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
         if path.startswith('/') or '..' in Path(path).parts or '\\' in path:
             raise ValueError('unsafe-approved-path')
     index = (release / 'index.html').read_text(encoding='utf-8')
+    # <base> changes the origin of even root-relative browser asset URLs.
+    # Hashing those URLs on this host would otherwise falsely pass.
+    class RejectBase(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            if tag == 'base':
+                raise ValueError('html-base-element-forbidden')
+    RejectBase().feed(index)
     entry = re.search(r'<script[^>]+type="module"[^>]+src="([^"]+)"', index)
     if not entry:
         raise ValueError('entry-module-missing')
