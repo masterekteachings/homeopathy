@@ -75,7 +75,9 @@ def check(release: Path, base: str, timeout: int) -> tuple[int, int]:
     for path in paths:
         # Request exactly the URL the browser uses; query-specific cache keys can hide stale assets.
         url = base.rstrip('/') + '/' + quote(path, safe='/')
-        request = Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'master-ek-live-release-verifier/1'})
+        # Do not force cache revalidation: ordinary learners use the bare URL
+        # without Cache-Control, and a stale CDN copy must fail verification.
+        request = Request(url, headers={'User-Agent': 'master-ek-live-release-verifier/1'})
         with urlopen(request, timeout=timeout) as response:
             # urllib follows redirects automatically. A byte-identical copy on
             # another host/path is not proof that this Reader serves the asset.
