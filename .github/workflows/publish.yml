@@ -31,6 +31,7 @@ jobs:
           import hashlib
           import json
           import re
+          from html.parser import HTMLParser
           from pathlib import Path
 
           manifest = json.loads(Path('release/.publication-manifest.json').read_text(encoding='utf-8'))
@@ -107,6 +108,13 @@ jobs:
           # affected HTML before staging; only the trusted builder may repair
           # the release and regenerate its manifest.
           reader_html = (root / 'index.html').read_text(encoding='utf-8')
+          # A <base> tag can send root-relative scripts/styles to another
+          # origin even when every approved local file hash matches.
+          class RejectBase(HTMLParser):
+              def handle_starttag(self, tag, attrs):
+                  if tag == 'base':
+                      raise SystemExit('release HTML base element redirects browser assets')
+          RejectBase().feed(reader_html)
           if 'installSourceLink' in reader_html and 'MutationObserver' in reader_html:
               # Require the actual guarded assignment, not a harmless-looking
               # condition in a comment alongside an unguarded assignment.
